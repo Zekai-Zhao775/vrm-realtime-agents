@@ -44,6 +44,16 @@ export class Model {
     this.mixer = new THREE.AnimationMixer(vrm.scene);
 
     this.emoteController = new EmoteController(vrm, this._lookAtTargetParent);
+    
+    // Debug: Check available expressions for lip sync
+    console.log("VRM loaded! Available expressions:", vrm.expressionManager);
+    if (vrm.expressionManager) {
+      console.log("Expression names:", Object.keys(vrm.expressionManager.expressions || {}));
+      const jawOpen = vrm.expressionManager.getExpression("JawOpen");
+      const aa = vrm.expressionManager.getExpression("aa");
+      console.log("JawOpen expression:", jawOpen);
+      console.log("aa expression:", aa);
+    }
   }
 
   public unLoadVrm() {
@@ -90,19 +100,39 @@ export class Model {
     });
   }
 
+  public async connectToAudioStream(stream: MediaStream) {
+    if (this._lipSync) {
+      await this._lipSync.connectToMediaStream(stream);
+    }
+  }
+
+  public disconnectFromAudioStream() {
+    if (this._lipSync) {
+      this._lipSync.disconnectFromMediaStream();
+    }
+  }
+
   public update(delta: number): void {
     if (this._lipSync) {
       const { volume } = this._lipSync.update();
+
+      // Add debugging for volume detection
+      if (volume > 0) {
+        console.log("🎤 Detected audio volume:", volume);
+      }
 
       // variable for expression controller
       let expression = this.vrm?.expressionManager?.getExpression("JawOpen");
       if (expression) {
         // handle Perfect Sync standard
-        
+        console.log("Using JawOpen expression, volume:", volume);
         // @ts-ignore
         this.emoteController?.lipSync("JawOpen", volume);
         // this.emoteController?.lipSync("MouthStretch", 0.4 * volume);
       } else {
+        if (volume > 0) {
+          console.log("Using 'aa' expression, volume:", volume);
+        }
         this.emoteController?.lipSync("aa", volume);
       }
     }

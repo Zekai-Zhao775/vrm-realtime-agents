@@ -34,6 +34,74 @@ export default function VrmChatApp() {
     });
   }, [transcriptItems]);
 
+  // Connect audio stream to VRM lip sync when connected
+  useEffect(() => {
+    console.log("Lip sync effect triggered:", { isConnected, hasModel: !!viewer.model, hasSession: !!session });
+    
+    if (isConnected && viewer.model) {
+      // Add a delay to ensure audio element is ready
+      setTimeout(async () => {
+        let stream: MediaStream | null = null;
+        
+        console.log("Attempting to connect lip sync...");
+        console.log("Audio element:", audioRef.current);
+        console.log("Audio element srcObject:", audioRef.current?.srcObject);
+        console.log("Session:", session);
+        
+        // Method 1: Get remote stream directly from WebRTC
+        try {
+          stream = session.getRemoteAudioStream();
+          console.log("WebRTC remote stream:", stream);
+          if (stream) {
+            console.log("Stream tracks:", stream.getTracks());
+            await viewer.model.connectToAudioStream(stream);
+            console.log("✅ Connected VRM lip sync to WebRTC remote audio stream");
+            return;
+          }
+        } catch (error) {
+          console.error("WebRTC stream access failed:", error);
+        }
+        
+        // Method 2: captureStream from audio element (newer browsers)
+        if (audioRef.current && audioRef.current.captureStream) {
+          try {
+            stream = audioRef.current.captureStream();
+            console.log("captureStream result:", stream);
+            if (stream && stream.getTracks().length > 0) {
+              await viewer.model.connectToAudioStream(stream);
+              console.log("✅ Connected VRM lip sync to audio stream via captureStream");
+              return;
+            }
+          } catch (error) {
+            console.warn("captureStream failed:", error);
+          }
+        }
+        
+        // Method 3: mozCaptureStream (Firefox)
+        if (audioRef.current && (audioRef.current as any).mozCaptureStream) {
+          try {
+            stream = (audioRef.current as any).mozCaptureStream();
+            console.log("mozCaptureStream result:", stream);
+            if (stream && stream.getTracks().length > 0) {
+              await viewer.model.connectToAudioStream(stream);
+              console.log("✅ Connected VRM lip sync to audio stream via mozCaptureStream");
+              return;
+            }
+          } catch (error) {
+            console.warn("mozCaptureStream failed:", error);
+          }
+        }
+        
+        console.error("❌ Could not access any audio stream for lip sync");
+      }, 1000); // Wait 1 second for audio to be ready
+      
+    } else if (!isConnected && viewer.model) {
+      // Disconnect when not connected
+      console.log("Disconnecting lip sync...");
+      viewer.model.disconnectFromAudioStream();
+    }
+  }, [isConnected, viewer.model, session]);
+
   const connect = async () => {
     setIsConnecting(true);
     try {

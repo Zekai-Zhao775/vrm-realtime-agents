@@ -196,6 +196,37 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
     sessionRef.current.transport.sendEvent({ type: 'response.create' } as any);
   }, []);
 
+  const getRemoteAudioStream = useCallback((): MediaStream | null => {
+    if (!sessionRef.current) return null;
+    
+    try {
+      // Access the WebRTC transport and get the remote stream
+      const transport = sessionRef.current.transport as any;
+      const pc = transport.pc;
+      
+      if (pc && pc.getRemoteStreams) {
+        const remoteStreams = pc.getRemoteStreams();
+        return remoteStreams.length > 0 ? remoteStreams[0] : null;
+      }
+      
+      // Alternative method for newer browsers
+      if (pc && pc.getReceivers) {
+        const receivers = pc.getReceivers();
+        const audioReceiver = receivers.find((receiver: any) => 
+          receiver.track && receiver.track.kind === 'audio'
+        );
+        
+        if (audioReceiver && audioReceiver.track) {
+          return new MediaStream([audioReceiver.track]);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to get remote audio stream:", error);
+    }
+    
+    return null;
+  }, []);
+
   return {
     status,
     connect,
@@ -206,5 +237,6 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
     pushToTalkStart,
     pushToTalkStop,
     interrupt,
+    getRemoteAudioStream,
   } as const;
 }
