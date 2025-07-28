@@ -238,7 +238,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 25rem;
+  width: 28rem; /* Wider container for better spacing */
   height: 100vh;
   padding-bottom: 8rem;
   z-index: 5;
@@ -263,15 +263,18 @@
 }
 
 .messageItem {
-  margin: 1rem auto;
+  margin: 1rem 0;
+  max-width: 20rem; /* Limit message width for better alignment */
 }
 
 .messageUser {
-  padding-left: 0.5rem;
+  margin-left: 4rem; /* Push user messages significantly to the right */
+  margin-right: 0.5rem;
 }
 
 .messageAssistant {
-  padding-right: 0.5rem;
+  margin-left: 0.5rem;
+  margin-right: 4rem; /* Push assistant messages significantly to the left */
 }
 
 .messageTimestamp {
