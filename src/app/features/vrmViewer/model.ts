@@ -39,8 +39,6 @@ export class Model {
     const vrm = (this.vrm = gltf.userData.vrm);
     vrm.scene.name = "VRMRoot";
 
-    // log all info about vrm, including blend shapes and expressions
-    console.log(vrm);
 
     VRMUtils.rotateVRM0(vrm);
     this.mixer = new THREE.AnimationMixer(vrm.scene);

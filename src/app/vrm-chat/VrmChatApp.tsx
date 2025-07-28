@@ -17,12 +17,22 @@ export default function VrmChatApp() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [inputMessage, setInputMessage] = useState("");
   const [showIntro, setShowIntro] = useState(true);
+  const [showConversationLog, setShowConversationLog] = useState(false);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const { viewer } = useContext(ViewerContext);
   const { transcriptItems, addTranscriptMessage } = useTranscript();
   const { events, setEvents } = useEvent();
 
   const session = useRealtimeSession();
+
+  // Auto-scroll conversation log when new messages arrive
+  useEffect(() => {
+    chatScrollRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [transcriptItems]);
 
   const connect = async () => {
     setIsConnecting(true);
@@ -53,9 +63,15 @@ export default function VrmChatApp() {
   const handleSendMessage = useCallback(async (message: string) => {
     if (!isConnected || !session || !message.trim()) return;
     
-    addTranscriptMessage(`user-${Date.now()}`, 'user', message);
+    // Send message to the voice agent via session
+    try {
+      session.sendUserText?.(message.trim());
+    } catch (error) {
+      console.error("Failed to send text message:", error);
+    }
+    
     setInputMessage("");
-  }, [isConnected, session, addTranscriptMessage]);
+  }, [isConnected, session]);
 
   return (
     <div className={styles.container}>
@@ -119,55 +135,121 @@ export default function VrmChatApp() {
       {/* VRM Viewer */}
       <VrmViewer />
 
-      {/* Bottom Input */}
-      <div className={styles.bottomInput}>
-        <div className={styles.inputContainer}>
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleSendMessage(inputMessage);
-              }
-            }}
-            placeholder="Type your message or speak directly..."
-            disabled={!isConnected}
-            className={`${styles.textInput} ${
-              isConnected ? styles.textInputEnabled : styles.textInputDisabled
-            }`}
-          />
+      {/* Control Buttons (ChatVRM style) */}
+      <div className={styles.buttonContainer}>
+        <div className={styles.buttonGrid}>
           <button
-            onClick={() => handleSendMessage(inputMessage)}
-            disabled={!isConnected || !inputMessage.trim()}
-            className={`${styles.sendButton} ${
-              (!isConnected || !inputMessage.trim()) ? styles.sendButtonDisabled : ''
-            }`}
+            className={styles.iconButton}
+            onClick={() => setShowIntro(true)}
           >
-            📤
+            ⚙️
+            <span className={styles.iconButtonLabel}>Settings</span>
           </button>
-        </div>
-        
-        <div className={styles.statusText}>
-          {isConnected ? '🎤 Voice chat active • Type or speak your message' : 'Connect to start chatting'}
+          <button
+            className={styles.iconButton}
+            onClick={() => setShowConversationLog(!showConversationLog)}
+            disabled={transcriptItems.filter(item => item.type === "MESSAGE" && !item.isHidden).length === 0}
+          >
+            {showConversationLog ? "💬" : "📝"}
+            <span className={styles.iconButtonLabel}>Conversation Log</span>
+          </button>
         </div>
       </div>
 
-      {/* Settings Button */}
-      <button
-        onClick={() => setShowIntro(true)}
-        className={styles.settingsButton}
-      >
-        ⚙️
-      </button>
+      {/* Conversation Log (ChatVRM style) */}
+      {showConversationLog && (
+        <div className={styles.conversationLog}>
+          <div className={styles.conversationMessages}>
+            <div className={styles.messagesContainer}>
+              {(() => {
+                const messages = transcriptItems
+                  .filter(item => item.type === "MESSAGE" && !item.isHidden)
+                  .sort((a, b) => a.createdAtMs - b.createdAtMs);
+                
+                return messages.map((item, index) => {
+                  const isUser = item.role === "user";
+                  const isLastMessage = index === messages.length - 1;
+                  
+                  return (
+                    <div 
+                      key={item.itemId} 
+                      ref={isLastMessage ? chatScrollRef : null}
+                      className={`${styles.messageItem} ${
+                        isUser ? styles.messageUser : styles.messageAssistant
+                      }`}
+                    >
+                      <div className={styles.messageTimestamp}>
+                        {item.timestamp}
+                      </div>
+                      <div 
+                        className={`${styles.messageHeader} ${
+                          isUser ? styles.messageHeaderUser : styles.messageHeaderAssistant
+                        }`}
+                      >
+                        {isUser ? "YOU" : "CHARACTER"}
+                      </div>
+                      <div 
+                        className={`${styles.messageContent} ${
+                          isUser ? styles.messageContentUser : styles.messageContentAssistant
+                        }`}
+                      >
+                        {item.title}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Input (ChatVRM style) */}
+      <div className={styles.bottomInput}>
+        <div className={styles.inputBackground}>
+          <div className={styles.inputContainer}>
+            <div className={styles.inputGrid}>
+              {/* Connect/Disconnect Button (replaces microphone) */}
+              <button
+                className={styles.connectButton}
+                onClick={isConnected ? () => session?.disconnect() : connect}
+                disabled={isConnecting}
+              >
+                {isConnecting ? "⏳" : isConnected ? "🔌" : "🔗"}
+              </button>
+              
+              {/* Text Input */}
+              <input
+                type="text"
+                placeholder="Message"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendMessage(inputMessage);
+                  }
+                }}
+                disabled={!isConnected}
+                className={styles.textInput}
+              />
+              
+              {/* Send Button */}
+              <button
+                className={styles.sendButton}
+                onClick={() => handleSendMessage(inputMessage)}
+                disabled={!isConnected || !inputMessage.trim()}
+              >
+                📤
+              </button>
+            </div>
+          </div>
+          
+        </div>
+      </div>
 
       <audio 
         ref={audioRef} 
         autoPlay 
-        onLoadStart={() => console.log("Audio loading started")}
-        onCanPlay={() => console.log("Audio can play")}
-        onPlay={() => console.log("Audio started playing")}
-        onVolumeChange={() => console.log("Audio volume changed")}
       />
     </div>
   );

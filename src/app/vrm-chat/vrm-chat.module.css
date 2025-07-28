@@ -2,8 +2,9 @@
   width: 100%;
   height: 100vh;
   position: relative;
-  background-color: #FBE2CA;
-  font-family: Arial, sans-serif;
+  /* Background removed - using global ChatVRM background */
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
   overflow: hidden;
 }
 
@@ -30,14 +31,18 @@
 
 .modalTitle {
   margin-bottom: 1rem;
-  color: #514062;
-  font-size: 1.5rem;
+  color: #000;
+  font-size: 2rem; /* typography-32 equivalent */
   font-weight: bold;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
 }
 
 .modalText {
   margin-bottom: 1.5rem;
-  color: #666;
+  color: #000;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+  font-size: 1rem; /* typography-16 equivalent */
 }
 
 .labelSection {
@@ -48,6 +53,9 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: bold;
+  color: #000;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-size: 1.25rem; /* typography-20 equivalent */
 }
 
 .select {
@@ -55,6 +63,11 @@
   padding: 0.5rem;
   border-radius: 0.5rem;
   border: 1px solid #ccc;
+  color: #000;
+  background-color: white;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+  font-size: 1rem;
 }
 
 .statusSection {
@@ -65,6 +78,9 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: #000;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
 }
 
 .statusDot {
@@ -97,6 +113,8 @@
   border-radius: 0.5rem;
   border: none;
   cursor: pointer;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
 }
 
 .buttonSecondary {
@@ -106,6 +124,8 @@
   border-radius: 0.5rem;
   border: none;
   cursor: pointer;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
 }
 
 .bottomInput {
@@ -161,16 +181,277 @@
   color: #666;
 }
 
-.settingsButton {
+/* Control Buttons (ChatVRM style) */
+.buttonContainer {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50%;
-  width: 3rem;
-  height: 3rem;
-  cursor: pointer;
-  font-size: 1.2rem;
-  z-index: 30;
+  z-index: 10;
+  margin: 1.5rem;
+  top: 0;
+  left: 0;
 }
+
+.buttonGrid {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 0.5rem;
+}
+
+.iconButton {
+  background-color: #856292;
+  color: white;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+}
+
+.iconButton:hover {
+  background-color: #6d4f7a;
+}
+
+.iconButton:active {
+  background-color: #5a3f65;
+}
+
+.iconButton:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.iconButtonLabel {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+}
+
+/* Conversation Log (left side positioning) */
+.conversationLog {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 25rem;
+  height: 100vh;
+  padding-bottom: 8rem;
+  z-index: 5;
+  /* Background removed as requested */
+}
+
+.conversationMessages {
+  max-height: 100%;
+  padding: 4rem 1rem 2rem 1rem;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.conversationMessages::-webkit-scrollbar {
+  display: none;
+}
+
+.messagesContainer {
+  max-width: 100%;
+  margin: 0;
+}
+
+.messageItem {
+  margin: 1rem auto;
+}
+
+.messageUser {
+  padding-left: 0.5rem;
+}
+
+.messageAssistant {
+  padding-right: 0.5rem;
+}
+
+.messageTimestamp {
+  font-size: 0.75rem;
+  color: #333;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.messageHeader {
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  letter-spacing: 0.1em; /* tracking-wider equivalent */
+  border-radius: 0.5rem 0.5rem 0 0;
+  font-size: 0.875rem;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+.messageHeaderUser {
+  background-color: rgba(251, 226, 202, 0.8); /* 80% opacity */
+  color: #2d1b3d;
+}
+
+.messageHeaderAssistant {
+  background-color: rgba(255, 97, 127, 0.8); /* 80% opacity */
+  color: white;
+}
+
+.messageContent {
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.85); /* 85% opacity */
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-size: 1rem; /* typography-16 equivalent */
+  line-height: 1.4;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+}
+
+.messageContentUser {
+  color: #2d1b3d;
+}
+
+.messageContentAssistant {
+  color: #2d1b3d;
+}
+
+/* Bottom Input (ChatVRM exact design, no background) */
+.bottomInput {
+  position: absolute;
+  bottom: 0;
+  z-index: 20;
+  width: 100vw;
+  background: transparent !important;
+}
+
+.inputBackground {
+  /* Explicitly set to transparent */
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.inputContainer {
+  margin: 0 auto;
+  max-width: 56rem; /* max-w-4xl = 896px */
+  padding: 4rem; /* p-16 = 64px */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent !important;
+}
+
+.inputGrid {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 0.5rem; /* gap-[8px] */
+  grid-template-columns: min-content 1fr min-content;
+  width: 100%;
+  max-width: 40rem; /* Make input area wider */
+  align-items: center; /* Align all items vertically */
+}
+
+/* Connect Button (replaces microphone) - ChatVRM exact style */
+.connectButton {
+  background-color: #FF617F; /* bg-secondary */
+  color: white;
+  border-radius: 1rem; /* rounded-16 */
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem; /* text-sm */
+  padding: 0.5rem; /* p-8 = 8px all sides */
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem; /* mr-2 */
+  transition: background-color 0.2s;
+  /* Exact ChatVRM dimensions: 24px icon + 8px padding = 40px total */
+  width: 2.5rem; /* 40px */
+  height: 2.5rem; /* 40px */
+}
+
+.connectButton:hover {
+  background-color: #FF849B; /* hover:bg-secondary-hover */
+}
+
+.connectButton:active {
+  background-color: #FF9EB1; /* active:bg-secondary-press */
+}
+
+.connectButton:disabled {
+  background-color: rgba(255, 97, 127, 0.3); /* disabled:bg-secondary-disabled */
+  cursor: not-allowed;
+}
+
+/* Text Input - Semi-transparent background */
+.textInput {
+  background-color: rgba(255, 255, 255, 0.8); /* 80% transparent white */
+  border: none; /* No border like original */
+  border-radius: 1rem; /* rounded-16 */
+  width: 100%;
+  height: 2.5rem; /* Match button height (40px) */
+  padding-left: 1rem; /* px-16 */
+  padding-right: 1rem;
+  color: #1f1f1f; /* text-text-primary - dark gray like ChatVRM */
+  font-size: 1rem; /* typography-16 */
+  line-height: 1.5rem;
+  font-weight: bold;
+  font-family: var(--font-m-plus-2, system-ui); /* font-M_PLUS_2 */
+  box-sizing: border-box; /* Include padding in height calculation */
+}
+
+.textInput:hover {
+  background-color: rgba(255, 255, 255, 0.9); /* Slightly more opaque on hover */
+}
+
+.textInput:focus {
+  background-color: rgba(255, 255, 255, 0.95); /* Almost opaque when focused for better readability */
+  outline: none;
+}
+
+.textInput:disabled {
+  background-color: rgba(255, 255, 255, 0.4); /* More transparent when disabled */
+  color: rgba(31, 31, 31, 0.5); /* Dimmed text when disabled */
+}
+
+.textInput::placeholder {
+  color: rgba(31, 31, 31, 0.6); /* Standard gray placeholder like ChatVRM */
+}
+
+/* Send Button - ChatVRM exact style */
+.sendButton {
+  background-color: #FF617F; /* bg-secondary */
+  color: white;
+  border-radius: 1rem; /* rounded-16 */
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem; /* text-sm */
+  padding: 0.5rem; /* p-8 = 8px all sides */
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem; /* mr-2 */
+  transition: background-color 0.2s;
+  /* Exact ChatVRM dimensions: 24px icon + 8px padding = 40px total */
+  width: 2.5rem; /* 40px */
+  height: 2.5rem; /* 40px */
+}
+
+.sendButton:hover {
+  background-color: #FF849B; /* hover:bg-secondary-hover */
+}
+
+.sendButton:active {
+  background-color: #FF9EB1; /* active:bg-secondary-press */
+}
+
+.sendButton:disabled {
+  background-color: rgba(255, 97, 127, 0.3); /* disabled:bg-secondary-disabled */
+  cursor: not-allowed;
+}
+

@@ -12,6 +12,10 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        'M_PLUS_2': ["var(--font-m-plus-2)"],
+        'Montserrat': ["var(--font-montserrat)"],
+      },
     },
   },
   plugins: [],

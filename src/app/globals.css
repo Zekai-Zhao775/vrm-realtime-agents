@@ -16,7 +16,11 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background-image: url('/bg-c.png');
+  background-position: top center;
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
