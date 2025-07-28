@@ -7,6 +7,7 @@ import { useRealtimeSession } from "@/app/hooks/useRealtimeSession";
 import { allAgentSets } from "@/app/agentConfigs";
 import { ViewerContext } from "@/app/features/vrmViewer/viewerContext";
 import VrmViewer from "@/app/components/vrm/vrmViewer";
+import styles from "./vrm-chat.module.css";
 
 export default function VrmChatApp() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -57,54 +58,25 @@ export default function VrmChatApp() {
   }, [isConnected, session, addTranscriptMessage]);
 
   return (
-    <div className="vrm-chat-container" style={{ 
-      width: '100%', 
-      height: '100vh', 
-      position: 'relative', 
-      backgroundColor: '#FBE2CA',
-      fontFamily: 'Arial, sans-serif',
-      overflow: 'hidden'
-    }}>
+    <div className={styles.container}>
       {/* Introduction Modal */}
       {showIntro && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 40
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '1rem',
-            maxWidth: '500px',
-            width: '90%'
-          }}>
-            <h2 style={{ marginBottom: '1rem', color: '#514062' }}>VRM Realtime Agents</h2>
-            <p style={{ marginBottom: '1.5rem', color: '#666' }}>
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h2 className={styles.modalTitle}>VRM Realtime Agents</h2>
+            <p className={styles.modalText}>
               Chat with 3D characters using OpenAI's Realtime API
             </p>
             
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            <div className={styles.labelSection}>
+              <label className={styles.label}>
                 Agent Type:
               </label>
               <select
                 value={agentConfig}
                 onChange={(e) => setAgentConfig(e.target.value)}
                 disabled={isConnected}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid #ccc'
-                }}
+                className={styles.select}
               >
                 <option value="chatSupervisor">Chat Supervisor</option>
                 <option value="simpleHandoff">Simple Handoff</option>
@@ -113,44 +85,29 @@ export default function VrmChatApp() {
               </select>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '50%',
-                  backgroundColor: isConnected ? '#10B981' : isConnecting ? '#F59E0B' : '#EF4444'
-                }}></div>
+            <div className={styles.statusSection}>
+              <div className={styles.statusIndicator}>
+                <div className={`${styles.statusDot} ${
+                  isConnected ? styles.statusConnected : 
+                  isConnecting ? styles.statusConnecting : 
+                  styles.statusDisconnected
+                }`}></div>
                 <span>{isConnected ? 'Connected' : isConnecting ? 'Connecting...' : 'Disconnected'}</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div className={styles.buttonGroup}>
               {!isConnected && !isConnecting && (
                 <button
                   onClick={connect}
-                  style={{
-                    backgroundColor: '#3B82F6',
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.5rem',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
+                  className={styles.buttonPrimary}
                 >
                   Connect to Agent
                 </button>
               )}
               <button
                 onClick={() => setShowIntro(false)}
-                style={{
-                  backgroundColor: '#FF617F',
-                  color: 'white',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.5rem',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
+                className={styles.buttonSecondary}
               >
                 Start Conversation
               </button>
@@ -163,21 +120,8 @@ export default function VrmChatApp() {
       <VrmViewer />
 
       {/* Bottom Input */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        padding: '1rem',
-        zIndex: 20
-      }}>
-        <div style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          display: 'flex',
-          gap: '0.5rem'
-        }}>
+      <div className={styles.bottomInput}>
+        <div className={styles.inputContainer}>
           <input
             type="text"
             value={inputMessage}
@@ -189,37 +133,22 @@ export default function VrmChatApp() {
             }}
             placeholder="Type your message or speak directly..."
             disabled={!isConnected}
-            style={{
-              flex: 1,
-              padding: '0.75rem',
-              borderRadius: '0.5rem',
-              border: '1px solid #ccc',
-              backgroundColor: isConnected ? 'white' : '#f5f5f5'
-            }}
+            className={`${styles.textInput} ${
+              isConnected ? styles.textInputEnabled : styles.textInputDisabled
+            }`}
           />
           <button
             onClick={() => handleSendMessage(inputMessage)}
             disabled={!isConnected || !inputMessage.trim()}
-            style={{
-              backgroundColor: '#3B82F6',
-              color: 'white',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: isConnected && inputMessage.trim() ? 'pointer' : 'not-allowed',
-              opacity: isConnected && inputMessage.trim() ? 1 : 0.5
-            }}
+            className={`${styles.sendButton} ${
+              (!isConnected || !inputMessage.trim()) ? styles.sendButtonDisabled : ''
+            }`}
           >
             📤
           </button>
         </div>
         
-        <div style={{
-          textAlign: 'center',
-          marginTop: '0.5rem',
-          fontSize: '0.8rem',
-          color: '#666'
-        }}>
+        <div className={styles.statusText}>
           {isConnected ? '🎤 Voice chat active • Type or speak your message' : 'Connect to start chatting'}
         </div>
       </div>
@@ -227,19 +156,7 @@ export default function VrmChatApp() {
       {/* Settings Button */}
       <button
         onClick={() => setShowIntro(true)}
-        style={{
-          position: 'absolute',
-          top: '1rem',
-          right: '1rem',
-          backgroundColor: 'rgba(255,255,255,0.9)',
-          border: 'none',
-          borderRadius: '50%',
-          width: '3rem',
-          height: '3rem',
-          cursor: 'pointer',
-          fontSize: '1.2rem',
-          zIndex: 30
-        }}
+        className={styles.settingsButton}
       >
         ⚙️
       </button>
