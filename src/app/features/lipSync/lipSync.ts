@@ -26,9 +26,31 @@ export class LipSync {
     volume = 1 / (1 + Math.exp(-45 * volume + 5));
     if (volume < 0.1) volume = 0;
 
+    // Analyze frequency content for more realistic lip sync
+    const frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+    this.analyser.getByteFrequencyData(frequencyData);
+    
+    // Calculate different frequency ranges
+    const lowFreq = this.getAverageFrequency(frequencyData, 0, 100);      // Low: "o", "u" sounds
+    const midFreq = this.getAverageFrequency(frequencyData, 100, 300);    // Mid: "a", "e" sounds  
+    const highFreq = this.getAverageFrequency(frequencyData, 300, 800);   // High: "i", consonants
+
     return {
       volume,
+      lowFreq: lowFreq / 255.0,
+      midFreq: midFreq / 255.0, 
+      highFreq: highFreq / 255.0,
     };
+  }
+
+  private getAverageFrequency(frequencyData: Uint8Array, startBin: number, endBin: number): number {
+    let sum = 0;
+    let count = 0;
+    for (let i = startBin; i < Math.min(endBin, frequencyData.length); i++) {
+      sum += frequencyData[i];
+      count++;
+    }
+    return count > 0 ? sum / count : 0;
   }
 
   public async playFromArrayBuffer(buffer: ArrayBuffer, onEnded?: () => void) {
