@@ -33,3 +33,6 @@ Thumbs.db
 
 # Local cache
 .npm-cache/
+
+# Claude Code
+.claude
