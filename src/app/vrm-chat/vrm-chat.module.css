@@ -458,3 +458,41 @@
   cursor: not-allowed;
 }
 
+/* VR Button Container - Seamlessly integrated with existing buttons */
+.vrButtonContainer {
+  display: flex;
+  align-items: center;
+}
+
+/* Style the WebXR VR button to match the existing iconButton style */
+.vrButtonContainer button {
+  background-color: #856292 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s !important;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif !important;
+  font-weight: bold !important;
+  text-decoration: none !important;
+  min-height: 2rem !important;
+}
+
+.vrButtonContainer button:hover {
+  background-color: #6d4f7a !important;
+}
+
+.vrButtonContainer button:active {
+  background-color: #5a3f65 !important;
+}
+
+.vrButtonContainer button:disabled {
+  background-color: #a0a0a0 !important;
+  cursor: not-allowed !important;
+}
+

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Model } from "./model";
 import { loadVRMAnimation } from "../../lib/VRMAnimation/loadVRMAnimation";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { VRButton } from "three/examples/jsm/webxr/VRButton";
 
 /**
  * three.jsを使った3Dビューワー
@@ -17,6 +18,7 @@ export class Viewer {
   private _scene: THREE.Scene;
   private _camera?: THREE.PerspectiveCamera;
   private _cameraControls?: OrbitControls;
+  private _vrCameraGroup?: THREE.Group;
 
   constructor() {
     this.isReady = false;
@@ -88,10 +90,19 @@ export class Viewer {
     this._renderer.outputEncoding = THREE.sRGBEncoding;
     this._renderer.setSize(width, height);
     this._renderer.setPixelRatio(window.devicePixelRatio);
+    
+    // Enable WebXR
+    this._renderer.xr.enabled = true;
 
     // camera
     this._camera = new THREE.PerspectiveCamera(20.0, width / height, 0.1, 20.0);
     this._camera.position.set(0, 1.3, 1.5);
+    
+    // Create VR camera group for movement handling
+    this._vrCameraGroup = new THREE.Group();
+    this._vrCameraGroup.add(this._camera);
+    this._scene.add(this._vrCameraGroup);
+    
     this._cameraControls?.target.set(0, 1.3, 0);
     this._cameraControls?.update();
     // camera controls
@@ -101,12 +112,22 @@ export class Viewer {
     );
     this._cameraControls.screenSpacePanning = true;
     this._cameraControls.update();
+    
+    // Add VR Button to the DOM
+    const vrButton = VRButton.createButton(this._renderer);
+    vrButton.style.cssText = ''; // Clear default styles so our CSS takes over
+    const vrButtonContainer = document.getElementById('VRButton');
+    if (vrButtonContainer) {
+      vrButtonContainer.appendChild(vrButton);
+    }
 
     window.addEventListener("resize", () => {
       this.resize();
     });
     this.isReady = true;
-    this.update();
+    
+    // Use WebXR-compatible animation loop
+    this._renderer.setAnimationLoop(this.update);
   }
 
   /**
@@ -148,9 +169,89 @@ export class Viewer {
     }
   }
 
+  /**
+   * Position avatar appropriately for VR viewing
+   */
+  public setupVRAvatar() {
+    if (this.model?.vrm && this._renderer?.xr.isPresenting) {
+      // Position avatar at comfortable VR distance (2 meters in front)
+      // The avatar stays at world origin, but the VR camera group moves around it
+      this.model.vrm.scene.position.set(0, 0, -2);
+      
+      // Scale avatar slightly larger for VR comfort
+      this.model.vrm.scene.scale.setScalar(1.1);
+      
+      console.log("VR avatar positioning applied");
+    }
+  }
+
+  /**
+   * Enable 1-to-1 real-world movement translation in VR
+   * The VR camera group handles room-scale movement automatically via WebXR
+   */
+  public enableVRMovement() {
+    if (this._renderer?.xr.isPresenting && this._vrCameraGroup) {
+      // WebXR automatically handles head tracking and 6DOF movement
+      // The _vrCameraGroup contains the camera and moves with the user's real-world movement
+      
+      // We could add additional movement constraints or enhancements here
+      // For example, preventing users from walking through the avatar:
+      const userPosition = new THREE.Vector3();
+      this._vrCameraGroup.getWorldPosition(userPosition);
+      
+      // Optional: Add boundary checking or avatar repositioning based on user movement
+      // This ensures the avatar stays at a comfortable viewing distance
+      if (this.model?.vrm) {
+        const avatarPosition = this.model.vrm.scene.position;
+        const distance = userPosition.distanceTo(avatarPosition);
+        
+        // If user gets too close or too far, maintain optimal viewing distance
+        if (distance < 1.0) {
+          // User too close - move avatar slightly back
+          const direction = new THREE.Vector3().subVectors(avatarPosition, userPosition).normalize();
+          this.model.vrm.scene.position.copy(userPosition).add(direction.multiplyScalar(1.5));
+        } else if (distance > 4.0) {
+          // User too far - move avatar slightly closer
+          const direction = new THREE.Vector3().subVectors(userPosition, avatarPosition).normalize();
+          this.model.vrm.scene.position.copy(userPosition).add(direction.multiplyScalar(-2.5));
+        }
+      }
+    }
+  }
+
+  /**
+   * Update avatar to continuously face the user in VR
+   */
+  public updateVRLookAt() {
+    if (this.model?.vrm && this._renderer?.xr.isPresenting && this._camera) {
+      // Get the current VR camera position
+      const cameraPosition = new THREE.Vector3();
+      this._camera.getWorldPosition(cameraPosition);
+      
+      // Update the look-at target to follow VR headset
+      if (this.model.emoteController) {
+        // The AutoLookAt system should automatically track the camera
+        // But we can enhance it for VR if needed
+        const lookAtTarget = this.model.emoteController.getLookAtTarget?.() || cameraPosition;
+        
+        // Make sure the avatar is always facing the user
+        if (this.model.vrm && this.model.vrm.lookAt && this.model.vrm.lookAt.target) {
+          this.model.vrm.lookAt.target.position.copy(cameraPosition);
+        }
+      }
+    }
+  }
+
   public update = () => {
-    requestAnimationFrame(this.update);
     const delta = this._clock.getDelta();
+    
+    // Setup VR avatar positioning when entering VR
+    if (this._renderer?.xr.isPresenting) {
+      this.setupVRAvatar();
+      this.enableVRMovement();
+      this.updateVRLookAt();
+    }
+    
     // update vrm components
     if (this.model) {
       this.model.update(delta);

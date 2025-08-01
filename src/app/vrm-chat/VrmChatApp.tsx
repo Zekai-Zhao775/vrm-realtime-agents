@@ -221,6 +221,7 @@ export default function VrmChatApp() {
             {showConversationLog ? "💬" : "📝"}
             <span className={styles.iconButtonLabel}>Conversation Log</span>
           </button>
+          <div id="VRButton" className={styles.vrButtonContainer}></div>
         </div>
       </div>
 
