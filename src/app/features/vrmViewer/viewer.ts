@@ -19,6 +19,8 @@ export class Viewer {
   private _camera?: THREE.PerspectiveCamera;
   private _cameraControls?: OrbitControls;
   private _vrCameraGroup?: THREE.Group;
+  private _environment?: THREE.Object3D;
+  private _currentEnvironmentType: string = 'gradient';
 
   constructor() {
     this.isReady = false;
@@ -26,6 +28,9 @@ export class Viewer {
     // scene
     const scene = new THREE.Scene();
     this._scene = scene;
+
+    // Initialize with default environment
+    this.setupDefaultEnvironment();
 
     // light
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
@@ -240,6 +245,278 @@ export class Viewer {
         }
       }
     }
+  }
+
+  /**
+   * Setup default environment (gradient skybox with subtle room)
+   */
+  private setupDefaultEnvironment() {
+    this.setEnvironment('gradient');
+  }
+
+  /**
+   * Set the environment type - easily replaceable for future development
+   * @param type - Environment type: 'gradient', 'room', 'studio', 'outdoor', 'space'
+   */
+  public setEnvironment(type: string) {
+    // Remove existing environment
+    if (this._environment) {
+      this._scene.remove(this._environment);
+      this._environment = undefined;
+    }
+
+    this._currentEnvironmentType = type;
+
+    switch (type) {
+      case 'gradient':
+        this._environment = this.createGradientEnvironment();
+        break;
+      case 'room':
+        this._environment = this.createRoomEnvironment();
+        break;
+      case 'studio':
+        this._environment = this.createStudioEnvironment();
+        break;
+      case 'outdoor':
+        this._environment = this.createOutdoorEnvironment();
+        break;
+      case 'space':
+        this._environment = this.createSpaceEnvironment();
+        break;
+      default:
+        this._environment = this.createGradientEnvironment();
+    }
+
+    if (this._environment) {
+      this._scene.add(this._environment);
+    }
+  }
+
+  /**
+   * Get current environment type
+   */
+  public getCurrentEnvironment(): string {
+    return this._currentEnvironmentType;
+  }
+
+  /**
+   * Create gradient skybox environment
+   */
+  private createGradientEnvironment(): THREE.Object3D {
+    const environment = new THREE.Group();
+
+    // Create gradient skybox
+    const skyGeometry = new THREE.SphereGeometry(50, 32, 16);
+    const skyMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        topColor: { value: new THREE.Color(0x4a90e2) },    // Nice blue
+        bottomColor: { value: new THREE.Color(0x87ceeb) }, // Sky blue
+        offset: { value: 33 },
+        exponent: { value: 0.6 }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform float offset;
+        uniform float exponent;
+        varying vec3 vWorldPosition;
+        void main() {
+          float h = normalize(vWorldPosition + offset).y;
+          gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+        }
+      `,
+      side: THREE.BackSide
+    });
+
+    const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+    environment.add(sky);
+
+    // Add subtle ground plane
+    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+    const groundMaterial = new THREE.MeshLambertMaterial({ 
+      color: 0xf0f0f0,
+      transparent: true,
+      opacity: 0.3
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1;
+    environment.add(ground);
+
+    return environment;
+  }
+
+  /**
+   * Create room environment
+   */
+  private createRoomEnvironment(): THREE.Object3D {
+    const environment = new THREE.Group();
+
+    // Room walls
+    const roomSize = 10;
+    const wallHeight = 4;
+    const wallMaterial = new THREE.MeshLambertMaterial({ 
+      color: 0xe8e8e8,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    // Floor
+    const floorGeometry = new THREE.PlaneGeometry(roomSize, roomSize);
+    const floorMaterial = new THREE.MeshLambertMaterial({ color: 0xd0d0d0 });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1;
+    environment.add(floor);
+
+    // Back wall
+    const backWallGeometry = new THREE.PlaneGeometry(roomSize, wallHeight);
+    const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+    backWall.position.set(0, wallHeight / 2 - 1, -roomSize / 2);
+    environment.add(backWall);
+
+    // Side walls
+    const sideWallGeometry = new THREE.PlaneGeometry(roomSize, wallHeight);
+    const leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
+    leftWall.rotation.y = Math.PI / 2;
+    leftWall.position.set(-roomSize / 2, wallHeight / 2 - 1, 0);
+    environment.add(leftWall);
+
+    const rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
+    rightWall.rotation.y = -Math.PI / 2;
+    rightWall.position.set(roomSize / 2, wallHeight / 2 - 1, 0);
+    environment.add(rightWall);
+
+    return environment;
+  }
+
+  /**
+   * Create studio environment
+   */
+  private createStudioEnvironment(): THREE.Object3D {
+    const environment = new THREE.Group();
+
+    // Curved backdrop
+    const backdropGeometry = new THREE.CylinderGeometry(8, 8, 6, 32, 1, true, 0, Math.PI);
+    const backdropMaterial = new THREE.MeshLambertMaterial({ 
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9
+    });
+    const backdrop = new THREE.Mesh(backdropGeometry, backdropMaterial);
+    backdrop.position.set(0, 2, 0);
+    backdrop.rotation.y = Math.PI;
+    environment.add(backdrop);
+
+    // Studio floor
+    const floorGeometry = new THREE.CircleGeometry(8, 32);
+    const floorMaterial = new THREE.MeshLambertMaterial({ color: 0xf5f5f5 });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1;
+    environment.add(floor);
+
+    return environment;
+  }
+
+  /**
+   * Create outdoor environment
+   */
+  private createOutdoorEnvironment(): THREE.Object3D {
+    const environment = new THREE.Group();
+
+    // Sky dome
+    const skyGeometry = new THREE.SphereGeometry(50, 32, 16);
+    const skyMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        topColor: { value: new THREE.Color(0x87ceeb) },    // Sky blue
+        bottomColor: { value: new THREE.Color(0x98fb98) }, // Pale green
+        offset: { value: 33 },
+        exponent: { value: 0.6 }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform float offset;
+        uniform float exponent;
+        varying vec3 vWorldPosition;
+        void main() {
+          float h = normalize(vWorldPosition + offset).y;
+          gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+        }
+      `,
+      side: THREE.BackSide
+    });
+
+    const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+    environment.add(sky);
+
+    // Grass ground
+    const groundGeometry = new THREE.PlaneGeometry(30, 30);
+    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x90ee90 });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1;
+    environment.add(ground);
+
+    return environment;
+  }
+
+  /**
+   * Create space environment
+   */
+  private createSpaceEnvironment(): THREE.Object3D {
+    const environment = new THREE.Group();
+
+    // Starfield
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1000;
+    const positions = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount * 3; i += 3) {
+      positions[i] = (Math.random() - 0.5) * 100;     // x
+      positions[i + 1] = (Math.random() - 0.5) * 100; // y  
+      positions[i + 2] = (Math.random() - 0.5) * 100; // z
+    }
+
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const starMaterial = new THREE.PointsMaterial({ 
+      color: 0xffffff,
+      size: 0.1
+    });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    environment.add(stars);
+
+    // Subtle platform
+    const platformGeometry = new THREE.CircleGeometry(3, 16);
+    const platformMaterial = new THREE.MeshLambertMaterial({ 
+      color: 0x333333,
+      transparent: true,
+      opacity: 0.5
+    });
+    const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+    platform.rotation.x = -Math.PI / 2;
+    platform.position.y = -1;
+    environment.add(platform);
+
+    return environment;
   }
 
   public update = () => {
