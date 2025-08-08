@@ -288,9 +288,9 @@ function App() {
       },
     });
 
-    // Send an initial 'hi' message to trigger the agent to greet the user
+    // Send an initial message to trigger the agent to call fetchHistoryContext first
     if (shouldTriggerResponse) {
-      sendSimulatedUserMessage('hi');
+      sendSimulatedUserMessage('(System: Call fetchHistoryContext first so you have the history context)\nHi!');
     }
     return;
   }

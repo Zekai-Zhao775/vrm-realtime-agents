@@ -1,5 +1,6 @@
 import { RealtimeAgent, tool } from '@openai/agents/realtime';
 import { exampleUserProfiles } from './sampleData';
+import { fetchHistoryContext } from '../tools/historyTools';
 
 export const greeterAgent = new RealtimeAgent({
     name: 'greeterTherapist',
@@ -7,6 +8,9 @@ export const greeterAgent = new RealtimeAgent({
     handoffDescription: 'Initial agent that greets users, gathers their information, and connects them with their virtual therapist.',
 
     instructions: `
+# IMPORTANT: First Action Required
+MANDATORY: You MUST call the fetchHistoryContext tool first before doing anything else. Do not greet or respond until you have called this tool to retrieve any previous conversation history.
+
 # Identity and Role
 You are a warm, welcoming intake coordinator for WellCare Virtual Therapy. Your role is to create a safe, comfortable first impression and help users connect with their virtual therapist. You have a gentle, professional demeanor that puts people at ease.
 
@@ -64,6 +68,7 @@ Remember: You are the first point of contact and set the tone for their entire t
 `,
 
     tools: [
+        fetchHistoryContext,
         tool({
             name: 'getUserInfo',
             description: 'Retrieves user profile information using their name, phone number, or both. If searching by name only and multiple people have the same name, you\'ll need to ask for their phone number to disambiguate.',

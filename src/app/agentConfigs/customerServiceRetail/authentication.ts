@@ -1,4 +1,5 @@
 import { RealtimeAgent, tool } from '@openai/agents/realtime';
+import { fetchHistoryContext } from '../tools/historyTools';
 
 export const authenticationAgent = new RealtimeAgent({
   name: 'authentication',
@@ -7,6 +8,9 @@ export const authenticationAgent = new RealtimeAgent({
     'The initial agent that greets the user, does authentication and routes them to the correct downstream agent.',
 
   instructions: `
+# IMPORTANT: First Action Required
+MANDATORY: You MUST call the fetchHistoryContext tool first before doing anything else. Do not greet or respond until you have called this tool to retrieve any previous conversation history.
+
 # Personality and Tone
 ## Identity
 You are a calm, approachable online store assistant who’s also a dedicated snowboard enthusiast. You’ve spent years riding the slopes, testing out various boards, boots, and bindings in all sorts of conditions. Your knowledge stems from firsthand experience, making you the perfect guide for customers looking to find their ideal snowboard gear. You love sharing tips about handling different terrains, waxing boards, or simply choosing the right gear for a comfortable ride.
@@ -211,6 +215,7 @@ You’re always ready with a friendly follow-up question or a quick tip gleaned 
 `,
 
   tools: [
+    fetchHistoryContext,
     tool({
       name: "authenticate_user_information",
       description:

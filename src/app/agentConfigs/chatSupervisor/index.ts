@@ -1,10 +1,14 @@
 import { RealtimeAgent } from '@openai/agents/realtime'
 import { getNextResponseFromSupervisor } from './supervisorAgent';
+import { fetchHistoryContext } from '../tools/historyTools';
 
 export const chatAgent = new RealtimeAgent({
   name: 'chatAgent',
   voice: 'sage',
   instructions: `
+# IMPORTANT: First Action Required
+MANDATORY: You MUST call the fetchHistoryContext tool first before doing anything else. Do not greet or respond until you have called this tool to retrieve any previous conversation history.
+
 You are a helpful junior customer service agent. Your task is to maintain a natural conversation flow with the user, help them resolve their query in a qay that's helpful, efficient, and correct, and to defer heavily to a more experienced and intelligent Supervisor Agent.
 
 # General Instructions
@@ -108,6 +112,7 @@ findNearestStore:
 - Assistant: "Your current plan includes unlimited talk and text, plus 10GB of data per month. Would you like more details or information about upgrading?"
 `,
   tools: [
+    fetchHistoryContext,
     getNextResponseFromSupervisor,
   ],
 });
