@@ -5,6 +5,13 @@ import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { conversationHistory } from "@/app/lib/conversationHistory";
 
+// Extend the Window interface to include our custom property
+declare global {
+  interface Window {
+    __currentSessionMessages: Array<{role: 'user' | 'assistant', content: string}>;
+  }
+}
+
 export function useHandleSessionHistory() {
   const {
     transcriptItems,
@@ -16,34 +23,88 @@ export function useHandleSessionHistory() {
 
   const { logServerEvent } = useEvent();
   
-  // Track current agent config for saving to localStorage
+  // Track current agent config and session messages in memory
   const currentAgentConfigRef = useRef<string | null>(null);
+  
+  // Use a more persistent storage approach - store in window object to survive hot reloads
+  if (typeof window !== 'undefined' && !window.__currentSessionMessages) {
+    window.__currentSessionMessages = [];
+  }
+  const getCurrentSessionMessages = () => (typeof window !== 'undefined' ? window.__currentSessionMessages : []) as Array<{role: 'user' | 'assistant', content: string}>;
+
+  // Function to save session to localStorage
+  const saveSessionToStorage = () => {
+    const agentConfig = currentAgentConfigRef.current;
+    const messages = getCurrentSessionMessages();
+    console.log('[SessionHistory] saveSessionToStorage called:', { 
+      agentConfig, 
+      messageCount: messages.length,
+      messages: messages.slice(0, 2) // Show first 2 messages for debugging
+    });
+    
+    if (!agentConfig || messages.length === 0) {
+      console.log('[SessionHistory] No session to save - agentConfig:', agentConfig, 'messages:', messages.length);
+      return;
+    }
+
+    console.log('[SessionHistory] Saving session to localStorage:', { 
+      agentConfig, 
+      messageCount: messages.length 
+    });
+
+    // Start a new conversation for this scenario
+    conversationHistory.startNewConversation(agentConfig);
+    
+    // Add all messages from current session to localStorage
+    messages.forEach(({ role, content }, index) => {
+      console.log('[SessionHistory] Adding message', index + 1, ':', { role, content: content.substring(0, 50) });
+      conversationHistory.addMessage(agentConfig, role, content);
+    });
+
+    // Clear current session from memory
+    if (typeof window !== 'undefined') {
+      window.__currentSessionMessages = [];
+    }
+    console.log('[SessionHistory] Session saved and memory cleared');
+  };
 
   // Function to initialize the current session with agent config
   const initializeSession = (agentConfig: string) => {
+    // Save previous session if switching scenarios
+    const messages = getCurrentSessionMessages();
+    if (currentAgentConfigRef.current && currentAgentConfigRef.current !== agentConfig && messages.length > 0) {
+      console.log('[SessionHistory] Switching scenarios, saving previous session');
+      saveSessionToStorage();
+    }
+    
     currentAgentConfigRef.current = agentConfig;
-    // Start a new conversation for this scenario
-    conversationHistory.startNewConversation(agentConfig);
+    if (typeof window !== 'undefined') {
+      window.__currentSessionMessages = [];
+    }
     console.log('[SessionHistory] Initialized session for agent config:', agentConfig);
   };
 
-  // Function to end the current conversation
+  // Function to end the current conversation and save to storage
   const endSession = () => {
-    conversationHistory.endCurrentConversation();
-    console.log('[SessionHistory] Ended current conversation');
+    console.log('[SessionHistory] Ending session and saving to storage');
+    saveSessionToStorage();
   };
 
-  // Function to save a message to localStorage
+  // Function to store a message in memory (not localStorage yet)
   const saveMessage = (role: 'user' | 'assistant', content: string) => {
     // Get agent config from URL as fallback if ref is null
     const agentConfig = currentAgentConfigRef.current || 
                        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('agentConfig') : null) || 
                        'simpleHandoff';
     
-    console.log('[SaveMessage] Attempting to save:', { role, content: content.substring(0, 50), agentConfig });
+    const messages = getCurrentSessionMessages();
+    console.log('[SaveMessage] Storing in memory:', { role, content: content.substring(0, 50), agentConfig, currentMessages: messages.length });
     
     if (agentConfig && content.trim()) {
-      conversationHistory.addMessage(agentConfig, role, content);
+      if (typeof window !== 'undefined') {
+        window.__currentSessionMessages.push({ role, content });
+        console.log('[SaveMessage] Message stored! Total messages now:', window.__currentSessionMessages.length);
+      }
     } else {
       console.log('[SaveMessage] Skipped - no agent config or empty content');
     }
@@ -241,6 +302,7 @@ export function useHandleSessionHistory() {
     handleTranscriptionCompleted,
     handleGuardrailTripped,
     initializeSession,
+    endSession,
   });
 
   // Update the handlers ref with current functions to capture latest state

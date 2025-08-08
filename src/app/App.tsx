@@ -244,6 +244,8 @@ function App() {
   };
 
   const disconnectFromRealtime = () => {
+    // Save current conversation history before disconnecting
+    historyHandlers.current.endSession();
     disconnect();
     setSessionStatus("DISCONNECTED");
     setIsPTTUserSpeaking(false);
@@ -438,6 +440,19 @@ function App() {
       stopRecording();
     };
   }, [sessionStatus]);
+
+  // Save conversation history before page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      historyHandlers.current.endSession();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
