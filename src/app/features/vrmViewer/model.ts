@@ -26,6 +26,8 @@ export class Model {
   }
 
   public async loadVRM(url: string): Promise<void> {
+    console.log('🔄 Loading VRM from:', url);
+    
     const loader = new GLTFLoader();
     loader.register(
       (parser) =>
@@ -34,7 +36,13 @@ export class Model {
         })
     );
 
-    const gltf = await loader.loadAsync(url);
+    try {
+      const gltf = await loader.loadAsync(url);
+      console.log('✅ VRM file loaded successfully');
+      
+      if (!gltf.userData.vrm) {
+        throw new Error('Loaded file does not contain VRM data');
+      }
 
     const vrm = (this.vrm = gltf.userData.vrm);
     vrm.scene.name = "VRMRoot";
@@ -86,6 +94,11 @@ export class Model {
       console.log("📊 Raw expressions object:", expressions);
     } else {
       console.error("❌ No expression manager found!");
+    }
+    
+    } catch (error) {
+      console.error('❌ Failed to load VRM:', error);
+      throw new Error(`VRM loading failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

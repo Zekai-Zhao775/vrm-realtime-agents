@@ -1,16 +1,72 @@
-import { useContext, useCallback } from "react";
+import { useContext, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { ViewerContext } from "../../features/vrmViewer/viewerContext";
+import { VRMManager } from "../../lib/vrmManager";
+import "../../lib/vrmUtils"; // Load development utilities
 
 export default function VrmViewer() {
   const { viewer } = useContext(ViewerContext);
+  const searchParams = useSearchParams();
+  const vrmManager = VRMManager.getInstance();
+  const isViewerReady = useRef(false);
+  
+  // Get current scenario from URL params
+  const currentScenario = searchParams.get("agentConfig") || "simpleHandoff";
+  
+  // Get VRM URL for current scenario
+  const getScenarioVRMUrl = () => {
+    return vrmManager.getVRMUrl(currentScenario);
+  };
 
-  const AVATAR_SAMPLE_B_VRM_URL = 'https://ipfs.io/ipfs/bafybeihx4xjb5mphocdq2os63g43pgnpi46ynolpmhln3oycoasywdnl3u';
+  // Function to load VRM for current scenario
+  const loadScenarioVRM = useCallback(async () => {
+    if (!isViewerReady.current) return;
+    
+    const vrmUrl = getScenarioVRMUrl();
+    console.log(`🎭 Loading VRM for scenario "${currentScenario}":`, vrmUrl);
+    
+    try {
+      // First validate if the VRM exists
+      const isValid = await vrmManager.validateVRMUrl(vrmUrl);
+      if (!isValid) {
+        console.warn(`VRM file not found: ${vrmUrl}, using fallback`);
+        // Try to load a fallback VRM
+        await viewer.loadVrm('/assets/vrm/default.vrm');
+      } else {
+        await viewer.loadVrm(vrmUrl);
+      }
+      
+      const vrmInfo = vrmManager.getVRMInfo(currentScenario);
+      console.log(`✅ VRM loaded successfully for ${currentScenario}:`, vrmInfo);
+      
+    } catch (error) {
+      console.error(`❌ Failed to load VRM for scenario "${currentScenario}":`, error);
+      // Try fallback
+      try {
+        console.log('Trying fallback VRM...');
+        await viewer.loadVrm('/assets/vrm/default.vrm');
+      } catch (fallbackError) {
+        console.error('❌ Fallback VRM also failed:', fallbackError);
+      }
+    }
+  }, [currentScenario, viewer, vrmManager]);
+
+  // Load VRM when scenario changes
+  useEffect(() => {
+    if (isViewerReady.current) {
+      console.log(`🔄 Scenario changed to: ${currentScenario}, reloading VRM`);
+      loadScenarioVRM();
+    }
+  }, [currentScenario, loadScenarioVRM]);
 
   const canvasRef = useCallback(
     (canvas: HTMLCanvasElement) => {
       if (canvas) {
         viewer.setup(canvas);
-        viewer.loadVrm(AVATAR_SAMPLE_B_VRM_URL);
+        isViewerReady.current = true;
+        
+        // Load initial VRM
+        loadScenarioVRM();
 
         // Drag and DropでVRMを差し替え
         canvas.addEventListener("dragover", function (event) {
@@ -34,12 +90,19 @@ export default function VrmViewer() {
           if (file_type === "vrm") {
             const blob = new Blob([file], { type: "application/octet-stream" });
             const url = window.URL.createObjectURL(blob);
-            viewer.loadVrm(url);
+            
+            // Load the VRM and save as custom for current scenario
+            viewer.loadVrm(url).then(() => {
+              vrmManager.setCustomVRM(currentScenario, url);
+              console.log(`✅ Custom VRM set for scenario "${currentScenario}"`);
+            }).catch(error => {
+              console.error('Failed to load dropped VRM:', error);
+            });
           }
         });
       }
     },
-    [viewer]
+    [viewer, loadScenarioVRM]
   );
 
   return (
