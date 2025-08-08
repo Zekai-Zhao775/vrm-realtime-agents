@@ -134,7 +134,7 @@ function App() {
     }
   };
 
-  useHandleSessionHistory();
+  const historyHandlers = useHandleSessionHistory();
 
   useEffect(() => {
     let finalAgentConfig = searchParams.get("agentConfig");
@@ -206,6 +206,10 @@ function App() {
       try {
         const EPHEMERAL_KEY = await fetchEphemeralKey();
         if (!EPHEMERAL_KEY) return;
+
+        // Initialize history tracking for this agent configuration
+        console.log('[App] Initializing session for agent config:', agentSetKey);
+        historyHandlers.current.initializeSession(agentSetKey);
 
         // Ensure the selectedAgentName is first so that it becomes the root
         const reorderedAgents = [...sdkScenarioMap[agentSetKey]];

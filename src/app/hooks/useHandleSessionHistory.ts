@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
+import { conversationHistory } from "@/app/lib/conversationHistory";
 
 export function useHandleSessionHistory() {
   const {
@@ -14,6 +15,39 @@ export function useHandleSessionHistory() {
   } = useTranscript();
 
   const { logServerEvent } = useEvent();
+  
+  // Track current agent config for saving to localStorage
+  const currentAgentConfigRef = useRef<string | null>(null);
+
+  // Function to initialize the current session with agent config
+  const initializeSession = (agentConfig: string) => {
+    currentAgentConfigRef.current = agentConfig;
+    // Start a new conversation for this scenario
+    conversationHistory.startNewConversation(agentConfig);
+    console.log('[SessionHistory] Initialized session for agent config:', agentConfig);
+  };
+
+  // Function to end the current conversation
+  const endSession = () => {
+    conversationHistory.endCurrentConversation();
+    console.log('[SessionHistory] Ended current conversation');
+  };
+
+  // Function to save a message to localStorage
+  const saveMessage = (role: 'user' | 'assistant', content: string) => {
+    // Get agent config from URL as fallback if ref is null
+    const agentConfig = currentAgentConfigRef.current || 
+                       (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('agentConfig') : null) || 
+                       'simpleHandoff';
+    
+    console.log('[SaveMessage] Attempting to save:', { role, content: content.substring(0, 50), agentConfig });
+    
+    if (agentConfig && content.trim()) {
+      conversationHistory.addMessage(agentConfig, role, content);
+    } else {
+      console.log('[SaveMessage] Skipped - no agent config or empty content');
+    }
+  };
 
   /* ----------------------- helpers ------------------------- */
 
@@ -106,6 +140,14 @@ export function useHandleSessionHistory() {
         addTranscriptBreadcrumb('Output Guardrail Active', { details: failureDetails });
       } else {
         addTranscriptMessage(itemId, role, text);
+        
+        // Save to localStorage if it's a real message (not transcribing placeholder)
+        if (text && text !== "[Transcribing...]") {
+          console.log('[HandleHistoryAdded] About to save message:', { role, text: text.substring(0, 100) });
+          saveMessage(role, text);
+        } else {
+          console.log('[HandleHistoryAdded] NOT saving message:', { role, text, reason: 'empty or transcribing' });
+        }
       }
     }
   }
@@ -115,12 +157,18 @@ export function useHandleSessionHistory() {
     items.forEach((item: any) => {
       if (!item || item.type !== 'message') return;
 
-      const { itemId, content = [] } = item;
-
+      const { itemId, role, content = [] } = item;
       const text = extractMessageText(content);
 
       if (text) {
         updateTranscriptMessage(itemId, text, false);
+        
+        // Save assistant messages that come through handleHistoryUpdated
+        if (role === 'assistant' && text && text !== "[Transcribing...]") {
+          console.log('[HandleHistoryUpdated] Saving ASSISTANT message:', { role, text: text.substring(0, 100) });
+          saveMessage(role, text);
+        }
+        // Don't save user messages here - they come through handleHistoryAdded
       }
     });
   }
@@ -192,7 +240,21 @@ export function useHandleSessionHistory() {
     handleTranscriptionDelta,
     handleTranscriptionCompleted,
     handleGuardrailTripped,
+    initializeSession,
   });
+
+  // Update the handlers ref with current functions to capture latest state
+  handlersRef.current = {
+    handleAgentToolStart,
+    handleAgentToolEnd,
+    handleHistoryUpdated,
+    handleHistoryAdded,
+    handleTranscriptionDelta,
+    handleTranscriptionCompleted,
+    handleGuardrailTripped,
+    initializeSession,
+    endSession,
+  };
 
   return handlersRef;
 }
