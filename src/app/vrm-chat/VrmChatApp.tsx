@@ -20,9 +20,10 @@ export default function VrmChatApp() {
   const [showIntro, setShowIntro] = useState(true);
   const [showConversationLog, setShowConversationLog] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const previousAgentConfigRef = useRef<string>(agentConfig);
 
   const { viewer } = useContext(ViewerContext);
-  const { transcriptItems, addTranscriptMessage } = useTranscript();
+  const { transcriptItems, addTranscriptMessage, clearTranscript } = useTranscript();
   const { events, setEvents } = useEvent();
 
   const session = useRealtimeSession();
@@ -136,6 +137,16 @@ export default function VrmChatApp() {
       }, 1000);
     }
   }, [isConnected]);
+
+  // Clear conversation log when agent config changes (but not on initial load)
+  useEffect(() => {
+    const previousAgentConfig = previousAgentConfigRef.current;
+    if (previousAgentConfig !== agentConfig) {
+      console.log(`[VRM Chat] Agent config changed from ${previousAgentConfig} to ${agentConfig}, clearing transcript`);
+      clearTranscript();
+      previousAgentConfigRef.current = agentConfig;
+    }
+  }, [agentConfig, clearTranscript]);
 
   const connect = async () => {
     try {
