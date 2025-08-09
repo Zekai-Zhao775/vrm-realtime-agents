@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
@@ -15,12 +16,15 @@ import styles from "./vrm-chat.module.css";
 
 export default function VrmChatApp() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [agentConfig, setAgentConfig] = useState("chatSupervisor");
+  const searchParams = useSearchParams();
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [inputMessage, setInputMessage] = useState("");
   const [showIntro, setShowIntro] = useState(true);
   const [showConversationLog, setShowConversationLog] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  
+  // Get agentConfig from URL parameters (same as debug page)
+  const agentConfig = searchParams.get("agentConfig") || "chatSupervisor";
   const previousAgentConfigRef = useRef<string>(agentConfig);
 
   const { viewer } = useContext(ViewerContext);
@@ -29,6 +33,20 @@ export default function VrmChatApp() {
 
   const session = useRealtimeSession();
   const historyHandlers = useHandleSessionHistory();
+
+  // Initialize URL parameter if missing or invalid (same as debug page)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    let finalAgentConfig = searchParams.get("agentConfig");
+    if (!finalAgentConfig || !allAgentSets[finalAgentConfig]) {
+      finalAgentConfig = "chatSupervisor";
+      const url = new URL(window.location.toString());
+      url.searchParams.set("agentConfig", finalAgentConfig);
+      window.location.replace(url.toString());
+      return;
+    }
+  }, [searchParams]);
   
   // Derive connection state from session status
   const isConnected = session.status === 'CONNECTED';
@@ -258,7 +276,12 @@ export default function VrmChatApp() {
               </label>
               <select
                 value={agentConfig}
-                onChange={(e) => setAgentConfig(e.target.value)}
+                onChange={(e) => {
+                  const newAgentConfig = e.target.value;
+                  const url = new URL(window.location.toString());
+                  url.searchParams.set("agentConfig", newAgentConfig);
+                  window.location.replace(url.toString());
+                }}
                 disabled={isConnected}
                 className={styles.select}
               >
