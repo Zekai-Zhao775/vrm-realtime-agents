@@ -281,12 +281,13 @@ export default function VrmChatApp() {
             </div>
 
             <div className={styles.buttonGroup}>
-              {!isConnected && !isConnecting && (
+              {!isConnected && (
                 <button
                   onClick={connect}
-                  className={styles.buttonPrimary}
+                  disabled={isConnecting}
+                  className={isConnecting ? styles.buttonConnecting : styles.buttonPrimary}
                 >
-                  Connect to Agent
+                  {isConnecting ? "Connecting..." : "Connect to Agent"}
                 </button>
               )}
               {isConnected && (

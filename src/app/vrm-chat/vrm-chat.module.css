@@ -107,7 +107,7 @@
 }
 
 .buttonPrimary {
-  background-color: #3B82F6;
+  background-color: #FF617F;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -115,6 +115,23 @@
   cursor: pointer;
   font-family: var(--font-m-plus-2), system-ui, sans-serif;
   font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.buttonPrimary:hover {
+  background-color: #FF4569;
+}
+
+.buttonConnecting {
+  background-color: #FF617F;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: not-allowed;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+  opacity: 0.7;
 }
 
 .buttonSecondary {
@@ -126,6 +143,11 @@
   cursor: pointer;
   font-family: var(--font-m-plus-2), system-ui, sans-serif;
   font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.buttonSecondary:hover {
+  background-color: #FF4569;
 }
 
 .buttonDisconnect {
@@ -144,7 +166,7 @@
 }
 
 .buttonClear {
-  background-color: #F97316;
+  background-color: #FF617F;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -152,10 +174,11 @@
   cursor: pointer;
   font-family: var(--font-m-plus-2), system-ui, sans-serif;
   font-weight: bold;
+  transition: background-color 0.2s;
 }
 
 .buttonClear:hover {
-  background-color: #EA580C;
+  background-color: #FF4569;
 }
 
 .bottomInput {
@@ -419,11 +442,11 @@
 
 /* Disconnected/connecting state - black */
 .connectButton[data-connected="false"] {
-  background-color: #1F2937; /* gray-800 */
+  background-color: #FF617F;
 }
 
 .connectButton[data-connected="false"]:hover {
-  background-color: #111827; /* gray-900 */
+  background-color: #FF4569;
 }
 
 .connectButton:disabled {
