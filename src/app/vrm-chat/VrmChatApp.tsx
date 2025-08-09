@@ -4,6 +4,7 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useRealtimeSession } from "@/app/hooks/useRealtimeSession";
+import { useHandleSessionHistory } from "@/app/hooks/useHandleSessionHistory";
 import { allAgentSets } from "@/app/agentConfigs";
 import { ViewerContext } from "@/app/features/vrmViewer/viewerContext";
 import { VRMManager } from "@/app/lib/vrmManager";
@@ -12,8 +13,6 @@ import styles from "./vrm-chat.module.css";
 
 export default function VrmChatApp() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [agentConfig, setAgentConfig] = useState("chatSupervisor");
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [inputMessage, setInputMessage] = useState("");
@@ -26,6 +25,11 @@ export default function VrmChatApp() {
   const { events, setEvents } = useEvent();
 
   const session = useRealtimeSession();
+  const historyHandlers = useHandleSessionHistory();
+  
+  // Derive connection state from session status
+  const isConnected = session.status === 'CONNECTED';
+  const isConnecting = session.status === 'CONNECTING';
 
   // Auto-scroll conversation log when new messages arrive
   useEffect(() => {
@@ -109,8 +113,20 @@ export default function VrmChatApp() {
     loadVRMForScenario();
   }, [agentConfig, isConnected, viewer]);
 
+  // Save conversation history before page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      historyHandlers.current.endSession();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   const connect = async () => {
-    setIsConnecting(true);
     try {
       // Load VRM for the selected scenario before connecting
       const vrmManager = VRMManager.getInstance();
@@ -141,18 +157,25 @@ export default function VrmChatApp() {
       if (!ephemeralKey) {
         throw new Error("No ephemeral key provided by the server");
       }
+
+      // Initialize history tracking for this agent configuration
+      console.log('[VRM Chat] Initializing session for agent config:', agentConfig);
+      historyHandlers.current.initializeSession(agentConfig);
       
-      await session?.connect({
+      await session.connect({
         getEphemeralKey: async () => ephemeralKey,
         initialAgents: allAgentSets[agentConfig],
         audioElement: audioRef.current || undefined,
       });
-      setIsConnected(true);
     } catch (error) {
       console.error("Failed to connect:", error);
-    } finally {
-      setIsConnecting(false);
     }
+  };
+
+  const disconnect = () => {
+    // Save current conversation history before disconnecting
+    historyHandlers.current.endSession();
+    session.disconnect();
   };
 
   const handleSendMessage = useCallback(async (message: string) => {
@@ -214,6 +237,14 @@ export default function VrmChatApp() {
                   className={styles.buttonPrimary}
                 >
                   Connect to Agent
+                </button>
+              )}
+              {isConnected && (
+                <button
+                  onClick={disconnect}
+                  className={styles.buttonDisconnect}
+                >
+                  Disconnect
                 </button>
               )}
               <button
@@ -308,10 +339,11 @@ export default function VrmChatApp() {
               {/* Connect/Disconnect Button (replaces microphone) */}
               <button
                 className={styles.connectButton}
-                onClick={isConnected ? () => session?.disconnect() : connect}
+                onClick={isConnected ? disconnect : connect}
                 disabled={isConnecting}
+                data-connected={isConnected.toString()}
               >
-                {isConnecting ? "⏳" : isConnected ? "🔌" : "🔗"}
+                {isConnecting ? "Connecting..." : isConnected ? "Disconnect" : "Connect"}
               </button>
               
               {/* Text Input */}

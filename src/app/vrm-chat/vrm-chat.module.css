@@ -128,6 +128,21 @@
   font-weight: bold;
 }
 
+.buttonDisconnect {
+  background-color: #EF4444;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+}
+
+.buttonDisconnect:hover {
+  background-color: #DC2626;
+}
+
 .bottomInput {
   position: absolute;
   bottom: 0;
@@ -357,36 +372,47 @@
   align-items: center; /* Align all items vertically */
 }
 
-/* Connect Button (replaces microphone) - ChatVRM exact style */
+/* Connect Button (replaces microphone) - Text-based with proper styling */
 .connectButton {
-  background-color: #FF617F; /* bg-secondary */
   color: white;
-  border-radius: 1rem; /* rounded-16 */
+  border-radius: 0.5rem;
   border: none;
   cursor: pointer;
-  font-size: 0.875rem; /* text-sm */
-  padding: 0.5rem; /* p-8 = 8px all sides */
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
   text-align: center;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-right: 0.5rem; /* mr-2 */
+  margin-right: 0.5rem;
   transition: background-color 0.2s;
-  /* Exact ChatVRM dimensions: 24px icon + 8px padding = 40px total */
-  width: 2.5rem; /* 40px */
-  height: 2.5rem; /* 40px */
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+  min-width: 6rem; /* Wider to accommodate text */
+  height: 2.5rem;
+  white-space: nowrap;
 }
 
-.connectButton:hover {
-  background-color: #FF849B; /* hover:bg-secondary-hover */
+/* Connected state - red for disconnect */
+.connectButton[data-connected="true"] {
+  background-color: #EF4444; /* red-500 */
 }
 
-.connectButton:active {
-  background-color: #FF9EB1; /* active:bg-secondary-press */
+.connectButton[data-connected="true"]:hover {
+  background-color: #DC2626; /* red-600 */
+}
+
+/* Disconnected/connecting state - black */
+.connectButton[data-connected="false"] {
+  background-color: #1F2937; /* gray-800 */
+}
+
+.connectButton[data-connected="false"]:hover {
+  background-color: #111827; /* gray-900 */
 }
 
 .connectButton:disabled {
-  background-color: rgba(255, 97, 127, 0.3); /* disabled:bg-secondary-disabled */
+  background-color: #6B7280; /* gray-500 */
   cursor: not-allowed;
 }
 
