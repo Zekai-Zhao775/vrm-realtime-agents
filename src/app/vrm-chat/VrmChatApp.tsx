@@ -37,44 +37,32 @@ export default function VrmChatApp() {
 
   // Connect audio stream to VRM lip sync when connected
   useEffect(() => {
-    console.log("Lip sync effect triggered:", { isConnected, hasModel: !!viewer.model, hasSession: !!session });
-    
     if (isConnected && viewer.model) {
       // Add a delay to ensure audio element is ready
       setTimeout(async () => {
         let stream: MediaStream | null = null;
         
-        console.log("Attempting to connect lip sync...");
-        console.log("Audio element:", audioRef.current);
-        console.log("Audio element srcObject:", audioRef.current?.srcObject);
-        console.log("Session:", session);
-        
         // Method 1: Get remote stream directly from WebRTC
         try {
           stream = session.getRemoteAudioStream();
-          console.log("WebRTC remote stream:", stream);
           if (stream) {
-            console.log("Stream tracks:", stream.getTracks());
             await viewer.model.connectToAudioStream(stream);
-            console.log("✅ Connected VRM lip sync to WebRTC remote audio stream");
             return;
           }
         } catch (error) {
-          console.error("WebRTC stream access failed:", error);
+          // Fallback to next method
         }
         
         // Method 2: captureStream from audio element (newer browsers)
         if (audioRef.current && audioRef.current.captureStream) {
           try {
             stream = audioRef.current.captureStream();
-            console.log("captureStream result:", stream);
             if (stream && stream.getTracks().length > 0) {
               await viewer.model.connectToAudioStream(stream);
-              console.log("✅ Connected VRM lip sync to audio stream via captureStream");
               return;
             }
           } catch (error) {
-            console.warn("captureStream failed:", error);
+            // Fallback to next method
           }
         }
         
@@ -82,23 +70,18 @@ export default function VrmChatApp() {
         if (audioRef.current && (audioRef.current as any).mozCaptureStream) {
           try {
             stream = (audioRef.current as any).mozCaptureStream();
-            console.log("mozCaptureStream result:", stream);
             if (stream && stream.getTracks().length > 0) {
               await viewer.model.connectToAudioStream(stream);
-              console.log("✅ Connected VRM lip sync to audio stream via mozCaptureStream");
               return;
             }
           } catch (error) {
-            console.warn("mozCaptureStream failed:", error);
+            // All methods failed
           }
         }
-        
-        console.error("❌ Could not access any audio stream for lip sync");
       }, 1000); // Wait 1 second for audio to be ready
       
     } else if (!isConnected && viewer.model) {
       // Disconnect when not connected
-      console.log("Disconnecting lip sync...");
       viewer.model.disconnectFromAudioStream();
     }
   }, [isConnected, viewer.model, session]);
@@ -110,19 +93,16 @@ export default function VrmChatApp() {
       
       const vrmManager = VRMManager.getInstance();
       const vrmUrl = vrmManager.getVRMUrl(agentConfig);
-      console.log(`🔄 Scenario changed to "${agentConfig}", loading VRM:`, vrmUrl);
       
       try {
         const isValid = await vrmManager.validateVRMUrl(vrmUrl);
         if (!isValid) {
-          console.warn(`VRM file not found: ${vrmUrl}, using fallback`);
           await viewer.loadVrm('/assets/vrm/default.vrm');
         } else {
           await viewer.loadVrm(vrmUrl);
         }
-        console.log(`✅ VRM loaded successfully for changed scenario "${agentConfig}"`);
       } catch (vrmError) {
-        console.error(`❌ Failed to load VRM for changed scenario "${agentConfig}":`, vrmError);
+        // VRM loading failed, continue without VRM
       }
     };
 
@@ -135,26 +115,20 @@ export default function VrmChatApp() {
       // Load VRM for the selected scenario before connecting
       const vrmManager = VRMManager.getInstance();
       const vrmUrl = vrmManager.getVRMUrl(agentConfig);
-      console.log(`🎭 Loading VRM for scenario "${agentConfig}":`, vrmUrl);
       
       try {
-        // Validate and load VRM
         const isValid = await vrmManager.validateVRMUrl(vrmUrl);
         if (!isValid) {
-          console.warn(`VRM file not found: ${vrmUrl}, using fallback`);
           await viewer.loadVrm('/assets/vrm/default.vrm');
         } else {
           await viewer.loadVrm(vrmUrl);
         }
-        console.log(`✅ VRM loaded successfully for scenario "${agentConfig}"`);
       } catch (vrmError) {
-        console.error(`❌ Failed to load VRM for scenario "${agentConfig}":`, vrmError);
         // Try fallback VRM
         try {
           await viewer.loadVrm('/assets/vrm/default.vrm');
-          console.log('✅ Fallback VRM loaded');
         } catch (fallbackError) {
-          console.error('❌ Fallback VRM also failed:', fallbackError);
+          console.error('VRM loading failed:', fallbackError);
         }
       }
       

@@ -26,8 +26,6 @@ export class Model {
   }
 
   public async loadVRM(url: string): Promise<void> {
-    console.log('🔄 Loading VRM from:', url);
-    
     const loader = new GLTFLoader();
     loader.register(
       (parser) =>
@@ -38,7 +36,6 @@ export class Model {
 
     try {
       const gltf = await loader.loadAsync(url);
-      console.log('✅ VRM file loaded successfully');
       
       if (!gltf.userData.vrm) {
         throw new Error('Loaded file does not contain VRM data');
@@ -53,47 +50,9 @@ export class Model {
 
     this.emoteController = new EmoteController(vrm, this._lookAtTargetParent);
     
-    // Debug: Check available expressions for lip sync
-    console.log("🔍 VRM loaded! Analyzing expressions...");
-    console.log("Expression manager:", vrm.expressionManager);
-    
-    if (vrm.expressionManager) {
-      const expressions = vrm.expressionManager.expressions || {};
-      console.log("📝 All available expression keys:", Object.keys(expressions));
-      
-      // Test common VRM 1.0 Perfect Sync expressions
-      const vrm1Expressions = ["JawOpen", "JawForward", "JawLeft", "JawRight", 
-                               "MouthApe", "MouthO", "MouthU", "MouthA", "MouthI", "MouthE",
-                               "MouthFunnel", "MouthPucker", "MouthSmile", "MouthSad",
-                               "MouthStretch", "MouthDimple", "MouthTightener", "MouthPressLeft", "MouthPressRight"];
-      
-      console.log("🎭 VRM 1.0 expressions available:");
-      vrm1Expressions.forEach(expr => {
-        const available = vrm.expressionManager!.getExpression(expr);
-        if (available) {
-          console.log(`  ✅ ${expr}:`, available);
-        } else {
-          console.log(`  ❌ ${expr}: not found`);
-        }
-      });
-      
-      // Test common VRM 0.x expressions  
-      const vrm0Expressions = ["aa", "ii", "uu", "ee", "oo", "blink", "joy", "angry", "sorrow", "fun"];
-      
-      console.log("🎌 VRM 0.x expressions available:");
-      vrm0Expressions.forEach(expr => {
-        const available = vrm.expressionManager!.getExpression(expr);
-        if (available) {
-          console.log(`  ✅ ${expr}:`, available);
-        } else {
-          console.log(`  ❌ ${expr}: not found`);
-        }
-      });
-      
-      // Show raw expression data
-      console.log("📊 Raw expressions object:", expressions);
-    } else {
-      console.error("❌ No expression manager found!");
+    // Initialize expression controller for lip sync
+    if (!vrm.expressionManager) {
+      console.warn("No expression manager found - lip sync may not work");
     }
     
     } catch (error) {
@@ -192,8 +151,6 @@ export class Model {
     const mouthSmile = expressions.getExpression("MouthSmile");
     
     if (jawOpen) {
-      // VRM 1.0 Perfect Sync expressions
-      console.log("🎭 Using VRM 1.0 expressions - Volume:", volume.toFixed(3), "Low:", lowFreq.toFixed(3), "Mid:", midFreq.toFixed(3), "High:", highFreq.toFixed(3));
       
       // Primary jaw movement based on overall volume
       this.emoteController.lipSync("JawOpen", volume * 0.7);
@@ -210,8 +167,6 @@ export class Model {
       }
       
     } else {
-      // Advanced natural lip sync for VRM 0.x - Multiple expressions based on speech characteristics
-      console.log("🎭 Natural Lip Sync - Volume:", volume.toFixed(3), "Low:", lowFreq.toFixed(3), "Mid:", midFreq.toFixed(3), "High:", highFreq.toFixed(3));
       
       // Get available expressions
       const aaExpression = expressions.getExpression("aa");      // Wide open mouth 
@@ -249,19 +204,16 @@ export class Model {
       // Consonants: Quick narrow mouth movement
       const eeWeight = Math.min(volume * 0.9 + naturalVariation, 1.0);
       this.emoteController?.lipSync("ee", eeWeight);
-      console.log("  → Consonant: 'ee' =", eeWeight.toFixed(3));
       
     } else if (lowFreq > midFreq && lowFreq > highFreq) {
       // Low frequency dominant: Open mouth sounds (a, o, ah)
       const aaWeight = Math.min(volume * 0.8 + naturalVariation, 1.0);
       this.emoteController?.lipSync("aa", aaWeight);
-      console.log("  → Low freq vowel: 'aa' =", aaWeight.toFixed(3));
       
     } else if (highFreq > 0.15) {
       // High frequency: Narrow mouth sounds (e, i)
       const eeWeight = Math.min(volume * 0.7 + naturalVariation, 1.0);
       this.emoteController?.lipSync("ee", eeWeight);
-      console.log("  → High freq vowel: 'ee' =", eeWeight.toFixed(3));
       
     } else if (midFreq > 0.1) {
       // Mid frequency: Blend between shapes
@@ -271,10 +223,8 @@ export class Model {
       
       if (aaWeight > eeWeight) {
         this.emoteController?.lipSync("aa", aaWeight);
-        console.log("  → Mid freq blend: 'aa' =", aaWeight.toFixed(3));
       } else {
         this.emoteController?.lipSync("ee", eeWeight);
-        console.log("  → Mid freq blend: 'ee' =", eeWeight.toFixed(3));
       }
       
     } else {
@@ -282,10 +232,8 @@ export class Model {
       const useNarrow = (Math.floor(time * 4) % 2 === 0) && volume > 0.5;
       if (useNarrow) {
         this.emoteController?.lipSync("ee", volume * 0.6 + naturalVariation);
-        console.log("  → Default alternate: 'ee'");
       } else {
         this.emoteController?.lipSync("aa", volume * 0.8 + naturalVariation);
-        console.log("  → Default alternate: 'aa'");
       }
     }
   }
@@ -301,8 +249,6 @@ export class Model {
     
     const finalWeight = Math.min(volume * 0.8 * frequencyModulation + naturalVariation, 1.0);
     this.emoteController?.lipSync(expression, Math.max(finalWeight, 0));
-    
-    console.log(`  → Single '${expression}' with variation =`, finalWeight.toFixed(3));
   }
 
   private clearLipSyncExpressions(): void {

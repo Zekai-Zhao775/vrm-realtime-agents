@@ -40,7 +40,6 @@ export class VRMManager {
     }
 
     // Fallback to a generic VRM if scenario not found
-    console.warn(`No VRM configured for scenario: ${scenarioKey}, using fallback`);
     const fallbackPath = '/assets/vrm/default.vrm';
     this.loadedVRMs.set(scenarioKey, fallbackPath);
     return fallbackPath;
@@ -52,7 +51,6 @@ export class VRMManager {
   public setCustomVRM(scenarioKey: string, vrmUrl: string): void {
     const customVRMKey = `custom_vrm_${scenarioKey}`;
     localStorage.setItem(customVRMKey, vrmUrl);
-    console.log(`Custom VRM set for ${scenarioKey}:`, vrmUrl);
   }
 
   /**
@@ -69,7 +67,6 @@ export class VRMManager {
   public clearCustomVRM(scenarioKey: string): void {
     const customVRMKey = `custom_vrm_${scenarioKey}`;
     localStorage.removeItem(customVRMKey);
-    console.log(`Custom VRM cleared for ${scenarioKey}, reverted to default`);
   }
 
   /**
@@ -95,7 +92,6 @@ export class VRMManager {
       const response = await fetch(url, { method: 'HEAD' });
       return response.ok;
     } catch (error) {
-      console.error('VRM validation failed:', error);
       return false;
     }
   }

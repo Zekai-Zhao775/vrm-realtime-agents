@@ -2,7 +2,6 @@ import { useContext, useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { ViewerContext } from "../../features/vrmViewer/viewerContext";
 import { VRMManager } from "../../lib/vrmManager";
-import "../../lib/vrmUtils"; // Load development utilities
 
 export default function VrmViewer() {
   const { viewer } = useContext(ViewerContext);
@@ -23,30 +22,23 @@ export default function VrmViewer() {
     if (!isViewerReady.current) return;
     
     const vrmUrl = getScenarioVRMUrl();
-    console.log(`🎭 Loading VRM for scenario "${currentScenario}":`, vrmUrl);
     
     try {
       // First validate if the VRM exists
       const isValid = await vrmManager.validateVRMUrl(vrmUrl);
       if (!isValid) {
-        console.warn(`VRM file not found: ${vrmUrl}, using fallback`);
         // Try to load a fallback VRM
         await viewer.loadVrm('/assets/vrm/default.vrm');
       } else {
         await viewer.loadVrm(vrmUrl);
       }
       
-      const vrmInfo = vrmManager.getVRMInfo(currentScenario);
-      console.log(`✅ VRM loaded successfully for ${currentScenario}:`, vrmInfo);
       
     } catch (error) {
-      console.error(`❌ Failed to load VRM for scenario "${currentScenario}":`, error);
-      // Try fallback
       try {
-        console.log('Trying fallback VRM...');
         await viewer.loadVrm('/assets/vrm/default.vrm');
       } catch (fallbackError) {
-        console.error('❌ Fallback VRM also failed:', fallbackError);
+        console.error('VRM loading failed:', fallbackError);
       }
     }
   }, [currentScenario, viewer, vrmManager]);
@@ -88,7 +80,6 @@ export default function VrmViewer() {
             // Load the VRM and save as custom for current scenario
             viewer.loadVrm(url).then(() => {
               vrmManager.setCustomVRM(currentScenario, url);
-              console.log(`✅ Custom VRM set for scenario "${currentScenario}"`);
             }).catch(error => {
               console.error('Failed to load dropped VRM:', error);
             });

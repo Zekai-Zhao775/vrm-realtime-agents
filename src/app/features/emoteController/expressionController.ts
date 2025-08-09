@@ -51,19 +51,6 @@ export class ExpressionController {
   }
 
   public lipSync(preset: VRMExpressionPresetName, value: number) {
-    // Debug: Log lip sync activity
-    if (value > 0) {
-      console.log(`💋 LipSync applying: ${preset} = ${value.toFixed(3)}`);
-      
-      // Check if the expression actually exists
-      const expression = this._expressionManager?.getExpression(preset);
-      if (expression) {
-        console.log(`  ✅ Expression "${preset}" found and will be applied`);
-      } else {
-        console.log(`  ❌ Expression "${preset}" NOT FOUND! This won't work.`);
-      }
-    }
-
     if (this._currentLipSync) {
       this._expressionManager?.setValue(this._currentLipSync.preset, 0);
     }
