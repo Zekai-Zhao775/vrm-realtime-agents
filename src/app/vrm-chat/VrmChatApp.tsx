@@ -6,6 +6,7 @@ import { useEvent } from "@/app/contexts/EventContext";
 import { useRealtimeSession } from "@/app/hooks/useRealtimeSession";
 import { allAgentSets } from "@/app/agentConfigs";
 import { ViewerContext } from "@/app/features/vrmViewer/viewerContext";
+import { VRMManager } from "@/app/lib/vrmManager";
 import VrmViewer from "@/app/components/vrm/vrmViewer";
 import styles from "./vrm-chat.module.css";
 
@@ -102,9 +103,61 @@ export default function VrmChatApp() {
     }
   }, [isConnected, viewer.model, session]);
 
+  // Load VRM when agent configuration changes (but only if already connected)
+  useEffect(() => {
+    const loadVRMForScenario = async () => {
+      if (!isConnected) return; // Only load VRM if already connected
+      
+      const vrmManager = VRMManager.getInstance();
+      const vrmUrl = vrmManager.getVRMUrl(agentConfig);
+      console.log(`🔄 Scenario changed to "${agentConfig}", loading VRM:`, vrmUrl);
+      
+      try {
+        const isValid = await vrmManager.validateVRMUrl(vrmUrl);
+        if (!isValid) {
+          console.warn(`VRM file not found: ${vrmUrl}, using fallback`);
+          await viewer.loadVrm('/assets/vrm/default.vrm');
+        } else {
+          await viewer.loadVrm(vrmUrl);
+        }
+        console.log(`✅ VRM loaded successfully for changed scenario "${agentConfig}"`);
+      } catch (vrmError) {
+        console.error(`❌ Failed to load VRM for changed scenario "${agentConfig}":`, vrmError);
+      }
+    };
+
+    loadVRMForScenario();
+  }, [agentConfig, isConnected, viewer]);
+
   const connect = async () => {
     setIsConnecting(true);
     try {
+      // Load VRM for the selected scenario before connecting
+      const vrmManager = VRMManager.getInstance();
+      const vrmUrl = vrmManager.getVRMUrl(agentConfig);
+      console.log(`🎭 Loading VRM for scenario "${agentConfig}":`, vrmUrl);
+      
+      try {
+        // Validate and load VRM
+        const isValid = await vrmManager.validateVRMUrl(vrmUrl);
+        if (!isValid) {
+          console.warn(`VRM file not found: ${vrmUrl}, using fallback`);
+          await viewer.loadVrm('/assets/vrm/default.vrm');
+        } else {
+          await viewer.loadVrm(vrmUrl);
+        }
+        console.log(`✅ VRM loaded successfully for scenario "${agentConfig}"`);
+      } catch (vrmError) {
+        console.error(`❌ Failed to load VRM for scenario "${agentConfig}":`, vrmError);
+        // Try fallback VRM
+        try {
+          await viewer.loadVrm('/assets/vrm/default.vrm');
+          console.log('✅ Fallback VRM loaded');
+        } catch (fallbackError) {
+          console.error('❌ Fallback VRM also failed:', fallbackError);
+        }
+      }
+      
       // Get the session token from our API endpoint
       const response = await fetch('/api/session');
       const data = await response.json();

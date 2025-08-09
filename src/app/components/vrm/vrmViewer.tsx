@@ -51,13 +51,8 @@ export default function VrmViewer() {
     }
   }, [currentScenario, viewer, vrmManager]);
 
-  // Load VRM when scenario changes
-  useEffect(() => {
-    if (isViewerReady.current) {
-      console.log(`🔄 Scenario changed to: ${currentScenario}, reloading VRM`);
-      loadScenarioVRM();
-    }
-  }, [currentScenario, loadScenarioVRM]);
+  // Don't automatically load VRM - wait for connection
+  // VRM will be loaded when user clicks connect
 
   const canvasRef = useCallback(
     (canvas: HTMLCanvasElement) => {
@@ -65,8 +60,7 @@ export default function VrmViewer() {
         viewer.setup(canvas);
         isViewerReady.current = true;
         
-        // Load initial VRM
-        loadScenarioVRM();
+        // Don't load VRM automatically - wait for user to connect
 
         // Drag and DropでVRMを差し替え
         canvas.addEventListener("dragover", function (event) {
