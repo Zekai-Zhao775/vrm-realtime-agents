@@ -181,16 +181,20 @@ export function useHandleSessionHistory() {
   }
 
   function handleHistoryAdded(item: any) {
-    console.log("[handleHistoryAdded] ", item);
+    console.log("[handleHistoryAdded] Raw item received:", JSON.stringify(item, null, 2));
     if (!item || item.type !== 'message') return;
 
     const { itemId, role, content = [] } = item;
+    console.log("[handleHistoryAdded] Processing:", { itemId, role, contentLength: content.length });
+    
     if (itemId && role) {
       const isUser = role === "user";
       let text = extractMessageText(content);
+      console.log("[handleHistoryAdded] Extracted text:", { isUser, text: text?.substring(0, 100) });
 
       if (isUser && !text) {
         text = "[Transcribing...]";
+        console.log("[handleHistoryAdded] Set transcribing placeholder for user");
       }
 
       // If the guardrail has been tripped, this message is a message that gets sent to the 
@@ -204,10 +208,10 @@ export function useHandleSessionHistory() {
         
         // Save to localStorage if it's a real message (not transcribing placeholder)
         if (text && text !== "[Transcribing...]") {
-          console.log('[HandleHistoryAdded] About to save message:', { role, text: text.substring(0, 100) });
+          console.log('[HandleHistoryAdded] ✅ About to save message:', { role, text: text.substring(0, 100) });
           saveMessage(role, text);
         } else {
-          console.log('[HandleHistoryAdded] NOT saving message:', { role, text, reason: 'empty or transcribing' });
+          console.log('[HandleHistoryAdded] ❌ NOT saving message:', { role, text, reason: 'empty or transcribing' });
         }
       }
     }
@@ -243,6 +247,8 @@ export function useHandleSessionHistory() {
   }
 
   function handleTranscriptionCompleted(item: any) {
+    console.log('[HandleTranscriptionCompleted] Raw event received:', JSON.stringify(item, null, 2));
+    
     // History updates don't reliably end in a completed item, 
     // so we need to handle finishing up when the transcription is completed.
     const itemId = item.item_id;
@@ -250,11 +256,42 @@ export function useHandleSessionHistory() {
         !item.transcript || item.transcript === "\n"
         ? "[inaudible]"
         : item.transcript;
+    
+    console.log('[HandleTranscriptionCompleted] Processed:', { itemId, finalTranscript });
+    
     if (itemId) {
       updateTranscriptMessage(itemId, finalTranscript, false);
       // Use the ref to get the latest transcriptItems
       const transcriptItem = transcriptItems.find((i) => i.itemId === itemId);
+      console.log('[HandleTranscriptionCompleted] Found transcript item:', { 
+        itemId, 
+        transcriptItem: transcriptItem ? { role: transcriptItem.role, title: transcriptItem.title?.substring(0, 50) } : null 
+      });
+      
       updateTranscriptItem(itemId, { status: 'DONE' });
+
+      // IMPORTANT: Save the final user transcript to conversation history!
+      // For voice input transcriptions, we can determine it's a user message by the event type
+      const isUserVoiceTranscription = item.type === "conversation.item.input_audio_transcription.completed";
+      
+      if (isUserVoiceTranscription && finalTranscript && finalTranscript !== '[inaudible]') {
+        console.log('[HandleTranscriptionCompleted] ✅ Saving final USER voice transcript:', { finalTranscript: finalTranscript.substring(0, 100) });
+        saveMessage('user', finalTranscript);
+      } else if (transcriptItem && transcriptItem.role === 'user' && finalTranscript && finalTranscript !== '[inaudible]') {
+        console.log('[HandleTranscriptionCompleted] ✅ Saving final USER transcript (fallback):', { finalTranscript: finalTranscript.substring(0, 100) });
+        saveMessage('user', finalTranscript);
+      } else {
+        console.log('[HandleTranscriptionCompleted] ❌ NOT saving transcript:', { 
+          hasTranscriptItem: !!transcriptItem,
+          role: transcriptItem?.role,
+          hasFinalTranscript: !!finalTranscript,
+          isInaudible: finalTranscript === '[inaudible]',
+          finalTranscript: finalTranscript,
+          transcriptItem: transcriptItem,
+          isUserVoiceTranscription: isUserVoiceTranscription,
+          eventType: item.type
+        });
+      }
 
       // If guardrailResult still pending, mark PASS.
       if (transcriptItem?.guardrailResult?.status === 'IN_PROGRESS') {
