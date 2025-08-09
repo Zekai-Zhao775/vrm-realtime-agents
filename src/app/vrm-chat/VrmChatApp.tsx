@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useRealtimeSession } from "@/app/hooks/useRealtimeSession";
@@ -126,6 +127,16 @@ export default function VrmChatApp() {
     };
   }, []);
 
+  // Send initial message to trigger history context fetch when connected
+  useEffect(() => {
+    if (isConnected) {
+      // Add a small delay to ensure the connection is fully established
+      setTimeout(() => {
+        sendSimulatedUserMessage('(System: Call fetchHistoryContext first so you have the history context)\nHi!');
+      }, 1000);
+    }
+  }, [isConnected]);
+
   const connect = async () => {
     try {
       // Load VRM for the selected scenario before connecting
@@ -176,6 +187,22 @@ export default function VrmChatApp() {
     // Save current conversation history before disconnecting
     historyHandlers.current.endSession();
     session.disconnect();
+  };
+
+  const sendSimulatedUserMessage = (text: string) => {
+    const id = uuidv4().slice(0, 32);
+    addTranscriptMessage(id, "user", text, true);
+
+    session.sendEvent?.({
+      type: 'conversation.item.create',
+      item: {
+        id,
+        type: 'message',
+        role: 'user',
+        content: [{ type: 'input_text', text }],
+      },
+    });
+    session.sendEvent?.({ type: 'response.create' });
   };
 
   const handleSendMessage = useCallback(async (message: string) => {
