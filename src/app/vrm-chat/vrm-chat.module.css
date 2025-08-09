@@ -450,8 +450,9 @@
 }
 
 .connectButton:disabled {
-  background-color: #6B7280; /* gray-500 */
+  background-color: #FF617F; /* Same pink as other connecting buttons */
   cursor: not-allowed;
+  opacity: 0.7; /* Slightly dimmed to show disabled state */
 }
 
 /* Text Input - Semi-transparent background */
