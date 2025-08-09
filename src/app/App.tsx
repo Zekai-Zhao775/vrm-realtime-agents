@@ -40,6 +40,7 @@ const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
 
 import useAudioDownload from "./hooks/useAudioDownload";
 import { useHandleSessionHistory } from "./hooks/useHandleSessionHistory";
+import { conversationHistory } from "./lib/conversationHistory";
 
 function App() {
   const searchParams = useSearchParams()!;
@@ -361,6 +362,17 @@ function App() {
     window.location.replace(url.toString());
   };
 
+  const handleClearHistory = () => {
+    if (confirm('Are you sure you want to clear all conversation history? This action cannot be undone.')) {
+      conversationHistory.clearAllHistories();
+      // Also clear current session memory
+      if (typeof window !== 'undefined') {
+        window.__currentSessionMessages = [];
+      }
+      alert('All conversation history has been cleared.');
+    }
+  };
+
   useEffect(() => {
     const storedPushToTalkUI = localStorage.getItem("pushToTalkUI");
     if (storedPushToTalkUI) {
@@ -571,6 +583,7 @@ function App() {
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
         codec={urlCodec}
         onCodecChange={handleCodecChange}
+        onClearHistory={handleClearHistory}
       />
     </div>
   );

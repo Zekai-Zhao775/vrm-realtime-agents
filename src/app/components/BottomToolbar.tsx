@@ -15,6 +15,7 @@ interface BottomToolbarProps {
   setIsAudioPlaybackEnabled: (val: boolean) => void;
   codec: string;
   onCodecChange: (newCodec: string) => void;
+  onClearHistory: () => void;
 }
 
 function BottomToolbar({
@@ -31,6 +32,7 @@ function BottomToolbar({
   setIsAudioPlaybackEnabled,
   codec,
   onCodecChange,
+  onClearHistory,
 }: BottomToolbarProps) {
   const isConnected = sessionStatus === "CONNECTED";
   const isConnecting = sessionStatus === "CONNECTING";
@@ -149,6 +151,15 @@ function BottomToolbar({
           <option value="pcmu">PCMU (8 kHz)</option>
           <option value="pcma">PCMA (8 kHz)</option>
         </select>
+      </div>
+
+      <div className="flex flex-row items-center gap-2">
+        <button
+          onClick={onClearHistory}
+          className="bg-orange-500 hover:bg-orange-600 text-white text-base px-3 py-1 rounded-md cursor-pointer font-medium"
+        >
+          Clear History
+        </button>
       </div>
     </div>
   );

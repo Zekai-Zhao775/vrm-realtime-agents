@@ -9,6 +9,7 @@ import { useHandleSessionHistory } from "@/app/hooks/useHandleSessionHistory";
 import { allAgentSets } from "@/app/agentConfigs";
 import { ViewerContext } from "@/app/features/vrmViewer/viewerContext";
 import { VRMManager } from "@/app/lib/vrmManager";
+import { conversationHistory } from "@/app/lib/conversationHistory";
 import VrmViewer from "@/app/components/vrm/vrmViewer";
 import styles from "./vrm-chat.module.css";
 
@@ -200,6 +201,17 @@ export default function VrmChatApp() {
     session.disconnect();
   };
 
+  const clearAllHistory = () => {
+    if (confirm('Are you sure you want to clear all conversation history? This action cannot be undone.')) {
+      conversationHistory.clearAllHistories();
+      // Also clear current session memory
+      if (typeof window !== 'undefined') {
+        window.__currentSessionMessages = [];
+      }
+      alert('All conversation history has been cleared.');
+    }
+  };
+
   const sendSimulatedUserMessage = (text: string) => {
     const id = uuidv4().slice(0, 32);
     addTranscriptMessage(id, "user", text, true);
@@ -285,6 +297,12 @@ export default function VrmChatApp() {
                   Disconnect
                 </button>
               )}
+              <button
+                onClick={clearAllHistory}
+                className={styles.buttonClear}
+              >
+                Clear All History
+              </button>
               <button
                 onClick={() => setShowIntro(false)}
                 className={styles.buttonSecondary}

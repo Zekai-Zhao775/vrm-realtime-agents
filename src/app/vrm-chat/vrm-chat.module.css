@@ -143,6 +143,21 @@
   background-color: #DC2626;
 }
 
+.buttonClear {
+  background-color: #F97316;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-m-plus-2), system-ui, sans-serif;
+  font-weight: bold;
+}
+
+.buttonClear:hover {
+  background-color: #EA580C;
+}
+
 .bottomInput {
   position: absolute;
   bottom: 0;
