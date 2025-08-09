@@ -431,13 +431,13 @@
   white-space: nowrap;
 }
 
-/* Connected state - red for disconnect */
+/* Connected state - pink to match other buttons */
 .connectButton[data-connected="true"] {
-  background-color: #EF4444; /* red-500 */
+  background-color: #FF617F;
 }
 
 .connectButton[data-connected="true"]:hover {
-  background-color: #DC2626; /* red-600 */
+  background-color: #FF4569;
 }
 
 /* Disconnected/connecting state - black */
