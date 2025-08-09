@@ -102,6 +102,16 @@ export function useHandleSessionHistory() {
     
     if (agentConfig && content.trim()) {
       if (typeof window !== 'undefined') {
+        // Check for duplicate messages to prevent multiple saves of the same content
+        const isDuplicate = messages.some(msg => 
+          msg.role === role && msg.content === content
+        );
+        
+        if (isDuplicate) {
+          console.log('[SaveMessage] Skipping duplicate message:', { role, content: content.substring(0, 50) });
+          return;
+        }
+        
         window.__currentSessionMessages.push({ role, content });
         console.log('[SaveMessage] Message stored! Total messages now:', window.__currentSessionMessages.length);
       }
