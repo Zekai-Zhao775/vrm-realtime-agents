@@ -32,6 +32,12 @@ export const VRM_CONFIGS: Record<string, VRMConfig> = {
     defaultModel: '/assets/vrm/customer-service.vrm',
     name: 'NewTelco Agent',
     description: 'Professional customer service representative'
+  },
+  
+  multiAgentVirtualTherapist: {
+    defaultModel: '/assets/vrm/therapist.vrm',
+    name: 'Multi-Agent Therapist',
+    description: 'Advanced multi-agent virtual therapy system with specialized therapeutic approaches'
   }
 };
 

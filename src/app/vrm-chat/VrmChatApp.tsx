@@ -289,6 +289,7 @@ export default function VrmChatApp() {
                 <option value="simpleHandoff">Simple Handoff</option>
                 <option value="customerServiceRetail">Customer Service</option>
                 <option value="virtualTherapist">Virtual Therapist</option>
+                <option value="multiAgentVirtualTherapist">Multi-Agent Therapist</option>
               </select>
             </div>
 

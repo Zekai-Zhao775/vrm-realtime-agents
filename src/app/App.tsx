@@ -29,6 +29,7 @@ import { customerServiceRetailCompanyName } from "@/app/agentConfigs/customerSer
 import { chatSupervisorCompanyName } from "@/app/agentConfigs/chatSupervisor";
 import { virtualTherapistCompanyName } from "@/app/agentConfigs/virtualTherapist";
 import { simpleHandoffScenario } from "@/app/agentConfigs/simpleHandoff";
+import { multiAgentVirtualTherapistScenario, multiAgentTherapistCompanyName } from "@/app/agentConfigs/multiAgentTherapist";
 
 // Map used by connect logic for scenarios defined via the SDK.
 const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
@@ -36,6 +37,7 @@ const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
   customerServiceRetail: customerServiceRetailScenario,
   chatSupervisor: chatSupervisorScenario,
   virtualTherapist: virtualTherapistScenario,
+  multiAgentVirtualTherapist: multiAgentVirtualTherapistScenario,
 };
 
 import useAudioDownload from "./hooks/useAudioDownload";
@@ -224,7 +226,9 @@ function App() {
           ? customerServiceRetailCompanyName
           : agentSetKey === 'virtualTherapist'
             ? virtualTherapistCompanyName
-            : chatSupervisorCompanyName;
+            : agentSetKey === 'multiAgentVirtualTherapist'
+              ? multiAgentTherapistCompanyName
+              : chatSupervisorCompanyName;
         const guardrail = createModerationGuardrail(companyName);
 
         await connect({
