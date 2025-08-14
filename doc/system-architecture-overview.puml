@@ -1,0 +1,101 @@
+@startuml System Architecture Overview
+!theme plain
+title Real-time VRM Virtual Therapist System Architecture
+
+package "Client-Side Application" {
+  package "Frontend Framework" {
+    [Next.js 15.3.1] as NextJS
+    [React 19.0.0] as React
+    [TypeScript] as TS
+  }
+  
+  package "Multi-Agent Coordination Layer" {
+    [Greeting Agent] as GreetAgent
+    [CBT Therapist Agent] as CBTAgent
+    [Humanistic Therapist Agent] as HumanAgent
+    [Safety Agent] as SafetyAgent
+    [Agent Handoff Manager] as HandoffManager
+  }
+  
+  package "Real-time Audio Pipeline" {
+    [WebRTC Transport] as WebRTC
+    [Audio Codec Manager] as AudioCodec
+    [Speech Interruption Handler] as SpeechHandler
+  }
+  
+  package "VRM Rendering Engine" {
+    [Three.js Scene] as ThreeJS
+    [VRM Loader] as VRMLoader
+    [Animation Controller] as AnimController
+    [Expression Manager] as ExpressionMgr
+  }
+  
+  package "WebXR Integration Layer" {
+    [VR Session Manager] as VRManager
+    [Spatial UI Controller] as SpatialUI
+    [Cross-Platform Adapter] as CrossPlatform
+  }
+  
+  package "Session Management Core" {
+    [User Profile Manager] as ProfileMgr
+    [Conversation History] as ConversationHist
+    [Progress Tracker] as ProgressTracker
+    [Context Preservation] as ContextMgr
+  }
+}
+
+package "External Services" {
+  [OpenAI Realtime API] as OpenAIAPI
+  [WebXR Browser APIs] as WebXRAPI
+  [Local Storage] as LocalStorage
+}
+
+package "User Interfaces" {
+  [Desktop Browser] as Desktop
+  [Mobile Browser] as Mobile
+  [VR Headset] as VRHeadset
+}
+
+' Connections
+NextJS --> React
+React --> TS
+
+' Multi-Agent connections
+HandoffManager --> GreetAgent
+HandoffManager --> CBTAgent
+HandoffManager --> HumanAgent
+HandoffManager --> SafetyAgent
+
+' Audio pipeline connections
+WebRTC --> OpenAIAPI
+AudioCodec --> WebRTC
+SpeechHandler --> WebRTC
+
+' VRM rendering connections
+ThreeJS --> VRMLoader
+AnimController --> ThreeJS
+ExpressionMgr --> AnimController
+
+' WebXR connections
+VRManager --> WebXRAPI
+SpatialUI --> VRManager
+CrossPlatform --> VRManager
+
+' Session management connections
+ProfileMgr --> LocalStorage
+ConversationHist --> ProfileMgr
+ProgressTracker --> ProfileMgr
+ContextMgr --> ConversationHist
+
+' Integration connections
+HandoffManager --> ContextMgr
+WebRTC --> AnimController
+ExpressionMgr --> AudioCodec
+VRManager --> ThreeJS
+
+' User interface connections
+Desktop --> NextJS
+Mobile --> NextJS
+VRHeadset --> VRManager
+
+@enduml

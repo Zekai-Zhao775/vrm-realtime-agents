@@ -1,0 +1,65 @@
+flowchart TD
+    Start([User Connects]) --> GreetAgent[Greeting Agent]
+    
+    GreetAgent --> |fetchUserProfile| ProfileCheck{Existing User?}
+    ProfileCheck --> |Yes| Welcome[Welcome Back]
+    ProfileCheck --> |No| Onboard[Onboarding Process]
+    
+    Welcome --> Consent[Consent Verification]
+    Onboard --> |updateUserProfile| Consent
+    
+    Consent --> SafetyScreen[Initial Safety Screening]
+    SafetyScreen --> |Crisis Detected| SafetyAgent[Safety Agent]
+    SafetyScreen --> |Safe| ApproachSelect[Therapeutic Approach Selection]
+    
+    ApproachSelect --> |CBT Selected| CBTAgent[CBT Therapist Agent]
+    ApproachSelect --> |Humanistic Selected| HumanAgent[Humanistic Therapist Agent]
+    
+    CBTAgent --> |During Session| CBTTools[CBT Tools & Techniques]
+    CBTTools --> |Thought Records| CBTAgent
+    CBTTools --> |Behavioral Activation| CBTAgent
+    CBTTools --> |Problem Solving| CBTAgent
+    
+    HumanAgent --> |During Session| HumanTools[Humanistic Techniques]
+    HumanTools --> |Reflective Listening| HumanAgent
+    HumanTools --> |Values Exploration| HumanAgent
+    HumanTools --> |Self-Discovery| HumanAgent
+    
+    CBTAgent --> |Crisis Detection| CrisisCheck{Crisis Indicators?}
+    HumanAgent --> |Crisis Detection| CrisisCheck
+    
+    CrisisCheck --> |Yes| HandoffSafety[Handoff to Safety Agent]
+    CrisisCheck --> |No| ContinueTherapy[Continue Therapy]
+    
+    HandoffSafety --> SafetyAgent
+    SafetyAgent --> |Risk Assessment| RiskLevel{Risk Level?}
+    RiskLevel --> |High| EmergencyProtocol[Emergency Protocol]
+    RiskLevel --> |Moderate| SafetyPlanning[Safety Planning]
+    RiskLevel --> |Low| BackToTherapy[Return to Therapy]
+    
+    ContinueTherapy --> SessionEnd{Session Ending?}
+    SafetyPlanning --> SessionEnd
+    BackToTherapy --> SessionEnd
+    
+    SessionEnd --> |Yes| Documentation[Update Progress & Memory]
+    SessionEnd --> |No| ContinueTherapy
+    
+    Documentation --> |updateProgress| ProgressUpdate[Progress Documentation]
+    Documentation --> |updateMemory| MemoryUpdate[Memory Documentation]
+    
+    ProgressUpdate --> EndSession[Session Complete]
+    MemoryUpdate --> EndSession
+    
+    EmergencyProtocol --> CrisisResources[Crisis Resources & Contacts]
+    CrisisResources --> EndSession
+    
+    EndSession --> Goodbye[Therapeutic Closure]
+    Goodbye --> Disconnect([User Disconnects])
+    
+    style GreetAgent fill:#e1f5fe
+    style CBTAgent fill:#f3e5f5
+    style HumanAgent fill:#e8f5e8
+    style SafetyAgent fill:#ffebee
+    style SafetyScreen fill:#fff3e0
+    style CrisisCheck fill:#fff3e0
+    style EmergencyProtocol fill:#ffcdd2

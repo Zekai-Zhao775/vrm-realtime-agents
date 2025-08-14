@@ -1,0 +1,114 @@
+@startuml Data Flow and System Integration
+!theme plain
+title Real-time Data Flow and Component Integration
+
+actor User
+boundary "User Interface" as UI
+control "Session Manager" as SessionMgr
+control "Agent Coordinator" as AgentCoord
+control "Audio Pipeline" as AudioPipe
+control "VRM Controller" as VRMCtrl
+control "VR Manager" as VRMgr
+entity "OpenAI API" as OpenAI
+entity "User Profile" as Profile
+entity "Conversation History" as History
+
+== Session Initialization ==
+User -> UI: Start session
+UI -> SessionMgr: Initialize session
+SessionMgr -> Profile: fetchUserProfile()
+Profile -> SessionMgr: User data
+SessionMgr -> History: fetchHistoryContext()
+History -> SessionMgr: Previous conversations
+SessionMgr -> AgentCoord: Initialize greeting agent
+AgentCoord -> VRMCtrl: Load scenario VRM
+VRMCtrl -> VRMCtrl: Load avatar assets
+VRMCtrl -> UI: Avatar ready
+SessionMgr -> AudioPipe: Setup audio connection
+AudioPipe -> OpenAI: Establish WebRTC session
+OpenAI -> AudioPipe: Connection established
+AudioPipe -> UI: Audio ready
+
+== Real-time Conversation ==
+User -> AudioPipe: Voice input (continuous)
+AudioPipe -> OpenAI: Real-time audio stream
+OpenAI -> OpenAI: Process with current agent
+OpenAI -> AudioPipe: AI response (real-time audio)
+AudioPipe -> UI: Play AI voice
+AudioPipe -> VRMCtrl: Audio analysis data
+VRMCtrl -> VRMCtrl: Generate lip-sync
+VRMCtrl -> VRMCtrl: Update expressions
+VRMCtrl -> UI: Synchronized avatar animation
+
+== Agent Handoff Process ==
+OpenAI -> AgentCoord: Agent handoff event
+AgentCoord -> AgentCoord: Evaluate handoff request
+AgentCoord -> SessionMgr: Preserve context
+SessionMgr -> History: Update conversation log
+AgentCoord -> OpenAI: Switch to new agent
+OpenAI -> AudioPipe: Continue with new agent
+AudioPipe -> VRMCtrl: Agent change notification
+VRMCtrl -> VRMCtrl: Adjust avatar persona
+VRMCtrl -> UI: Update avatar appearance
+
+== VR Mode Activation ==
+User -> UI: Request VR mode
+UI -> VRMgr: Check VR availability
+VRMgr -> VRMgr: Detect WebXR support
+VRMgr -> UI: VR capabilities
+UI -> VRMgr: Initialize VR session
+VRMgr -> VRMCtrl: Setup VR avatar positioning
+VRMCtrl -> VRMCtrl: Adjust for VR viewing
+VRMgr -> UI: VR environment ready
+UI -> User: Immersive VR experience
+
+== Continuous Monitoring ==
+loop Real-time updates
+    AudioPipe -> SessionMgr: Audio quality metrics
+    VRMCtrl -> SessionMgr: Rendering performance
+    VRMgr -> SessionMgr: VR session status
+    SessionMgr -> UI: System status updates
+    
+    alt Performance degradation
+        SessionMgr -> AudioPipe: Adjust quality
+        SessionMgr -> VRMCtrl: Reduce complexity
+        SessionMgr -> VRMgr: Optimize VR rendering
+    end
+end
+
+== Session Data Management ==
+loop During conversation
+    AgentCoord -> SessionMgr: Therapeutic progress
+    SessionMgr -> Profile: Update user insights
+    SessionMgr -> History: Log conversation events
+    
+    alt Crisis detection
+        OpenAI -> AgentCoord: Crisis indicators
+        AgentCoord -> SessionMgr: Emergency protocol
+        SessionMgr -> Profile: Log safety concerns
+        AgentCoord -> OpenAI: Handoff to safety agent
+    end
+end
+
+== Session Termination ==
+User -> UI: End session
+UI -> SessionMgr: Terminate session
+SessionMgr -> AgentCoord: Session ending detected
+AgentCoord -> OpenAI: updateProgress() tool call
+AgentCoord -> OpenAI: updateMemory() tool call
+OpenAI -> Profile: Store session outcomes
+OpenAI -> History: Final conversation log
+SessionMgr -> AudioPipe: Close audio connection
+AudioPipe -> OpenAI: Disconnect session
+SessionMgr -> VRMCtrl: Stop avatar
+VRMCtrl -> UI: Clear 3D scene
+SessionMgr -> VRMgr: Exit VR if active
+VRMgr -> UI: Return to normal view
+SessionMgr -> UI: Session complete
+
+note over User, History
+All data flows maintain real-time synchronization
+while preserving therapeutic context and user privacy
+end note
+
+@enduml

@@ -1,0 +1,106 @@
+flowchart TD
+    Start([User Opens Application]) --> BrowserCheck{WebXR Support?}
+    
+    BrowserCheck --> |Yes| VRDetection[Detect VR Hardware]
+    BrowserCheck --> |No| Fallback2D[Fall back to 2D Mode]
+    
+    VRDetection --> HardwareCheck{VR Hardware Connected?}
+    HardwareCheck --> |Yes| VRButton[Show VR Button]
+    HardwareCheck --> |No| Desktop2D[Desktop 2D Mode]
+    
+    VRButton --> UserChoice{User Clicks VR?}
+    UserChoice --> |Yes| VRSession[Initialize VR Session]
+    UserChoice --> |No| Desktop2D
+    
+    VRSession --> SessionCheck{Session Created?}
+    SessionCheck --> |Success| VRSetup[Setup VR Environment]
+    SessionCheck --> |Failed| ErrorHandle[Display Error Message]
+    
+    ErrorHandle --> Desktop2D
+    
+    VRSetup --> CameraSetup[Configure VR Camera Group]
+    CameraSetup --> AvatarPosition[Position Avatar in VR Space]
+    AvatarPosition --> EnvironmentLoad[Load VR Environment]
+    
+    EnvironmentLoad --> EnvChoice[Environment Selection]
+    EnvChoice --> |Gradient| GradientEnv[Gradient Skybox Environment]
+    EnvChoice --> |Room| RoomEnv[Therapy Room Environment]
+    EnvChoice --> |Studio| StudioEnv[Professional Studio Environment]
+    EnvChoice --> |Outdoor| OutdoorEnv[Natural Outdoor Environment]
+    EnvChoice --> |Space| SpaceEnv[Space/Cosmic Environment]
+    
+    GradientEnv --> VRReady[VR Experience Ready]
+    RoomEnv --> VRReady
+    StudioEnv --> VRReady
+    OutdoorEnv --> VRReady
+    SpaceEnv --> VRReady
+    
+    Desktop2D --> TherapySession[Start Therapy Session]
+    Fallback2D --> TherapySession
+    VRReady --> TherapySession
+    
+    TherapySession --> AudioInit[Initialize Audio Pipeline]
+    AudioInit --> AgentInit[Initialize Therapy Agents]
+    
+    AgentInit --> SessionLoop{During Session}
+    
+    SessionLoop --> |VR Mode| VRUpdates[VR-Specific Updates]
+    SessionLoop --> |2D Mode| StandardUpdates[Standard 2D Updates]
+    
+    VRUpdates --> AvatarTracking[Update Avatar-User Distance]
+    AvatarTracking --> GazeTracking[Update Avatar Gaze to User]
+    GazeTracking --> MovementTracking[Track User Room-Scale Movement]
+    MovementTracking --> ComfortCheck[Check User Comfort]
+    
+    ComfortCheck --> ComfortAdjust{Needs Adjustment?}
+    ComfortAdjust --> |Yes| AdjustPosition[Adjust Avatar Position]
+    ComfortAdjust --> |No| ContinueVR[Continue VR Experience]
+    
+    AdjustPosition --> ContinueVR
+    ContinueVR --> SessionLoop
+    
+    StandardUpdates --> Regular2D[Regular 2D Rendering]
+    Regular2D --> SessionLoop
+    
+    SessionLoop --> |Session Ends| Cleanup[Cleanup Resources]
+    SessionLoop --> |User Exits VR| VRTransition[Transition to 2D]
+    
+    VRTransition --> ExitVR[Exit VR Session]
+    ExitVR --> Desktop2D
+    
+    Cleanup --> SessionEnd[Session Complete]
+    
+    subgraph "Cross-Platform Compatibility"
+        VRDevices[VR Device Support]
+        MetaQuest[Meta Quest Series]
+        HTCVive[HTC Vive]
+        Other[Other WebXR Devices]
+        
+        VRDevices --> MetaQuest
+        VRDevices --> HTCVive
+        VRDevices --> Other
+    end
+    
+    subgraph "Progressive Enhancement"
+        BaseFeatures[Core Therapy Features]
+        VREnhanced[VR Enhanced Features]
+        
+        BaseFeatures --> |Always Available| TherapySession
+        VREnhanced --> |When VR Available| VRUpdates
+    end
+    
+    subgraph "Environment Options"
+        EnvTypes[Environment Types]
+        Therapeutic[Therapeutic Spaces]
+        Customizable[User Customizable]
+        
+        EnvTypes --> Therapeutic
+        EnvTypes --> Customizable
+    end
+    
+    style VRSession fill:#e3f2fd
+    style VRReady fill:#e8f5e8
+    style VRUpdates fill:#f3e5f5
+    style ErrorHandle fill:#ffebee
+    style ComfortCheck fill:#fff3e0
+    style SessionLoop fill:#e0f2f1

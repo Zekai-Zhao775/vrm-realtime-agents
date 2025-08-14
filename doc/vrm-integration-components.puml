@@ -1,0 +1,174 @@
+@startuml VRM Integration Component Architecture
+!theme plain
+title VRM Integration and Animation System
+
+package "VRM Management Layer" {
+  class VRMManager {
+    -instance: VRMManager
+    -loadedVRMs: Map<string, string>
+    +getInstance(): VRMManager
+    +getVRMUrl(scenarioKey: string): string
+    +setCustomVRM(scenarioKey: string, url: string): void
+    +validateVRMUrl(url: string): Promise<boolean>
+    +getAllScenarioVRMs(): Record
+  }
+  
+  class VRMViewer {
+    -viewer: Viewer
+    -vrmManager: VRMManager
+    -isViewerReady: boolean
+    +loadScenarioVRM(): Promise<void>
+    +canvasRef(): HTMLCanvasElement
+    +handleDragDrop(): void
+  }
+}
+
+package "Three.js Rendering Engine" {
+  class Viewer {
+    +model?: Model
+    -_renderer: WebGLRenderer
+    -_scene: Scene
+    -_camera: PerspectiveCamera
+    -_vrCameraGroup: Group
+    +loadVrm(url: string): Promise<void>
+    +setupVRAvatar(): void
+    +updateVRLookAt(): void
+    +setEnvironment(type: string): void
+    +update(): void
+  }
+  
+  class Model {
+    +vrm?: VRM
+    +mixer?: AnimationMixer
+    +emoteController?: EmoteController
+    -_lipSync: LipSync
+    +loadVRM(url: string): Promise<void>
+    +loadAnimation(vrmAnimation: VRMAnimation): Promise<void>
+    +speak(buffer: ArrayBuffer, screenplay: Screenplay): Promise<void>
+    +update(delta: number): void
+  }
+}
+
+package "@pixiv/three-vrm Integration" {
+  class VRMLoaderPlugin {
+    +parser: GLTFParser
+    +lookAtPlugin: VRMLookAtSmootherLoaderPlugin
+    +register(): void
+  }
+  
+  class VRM {
+    +scene: Object3D
+    +expressionManager: VRMExpressionManager
+    +lookAt: VRMLookAt
+    +humanoid: VRMHumanoid
+    +springBoneManager: VRMSpringBoneManager
+  }
+  
+  class VRMExpressionManager {
+    +expressions: VRMExpression[]
+    +getValue(name: string): number
+    +setValue(name: string, value: number): void
+    +update(delta: number): void
+  }
+}
+
+package "Animation Control System" {
+  class EmoteController {
+    -_vrm: VRM
+    -_lookAtTargetParent: Object3D
+    -_autoLookAt: AutoLookAt
+    -_autoBlink: AutoBlink
+    -_expressionController: ExpressionController
+    +playEmotion(emotion: string): void
+    +update(delta: number): void
+    +getLookAtTarget(): Vector3
+  }
+  
+  class ExpressionController {
+    -_expressionManager: VRMExpressionManager
+    -_expressions: Map<string, number>
+    +playEmotion(emotion: string): Promise<void>
+    +setExpression(name: string, value: number): void
+    +update(delta: number): void
+  }
+  
+  class LipSync {
+    -_audioContext: AudioContext
+    -_analyser?: AnalyserNode
+    +update(): void
+    +start(buffer: ArrayBuffer): Promise<void>
+    +stop(): void
+  }
+  
+  class AutoLookAt {
+    -_lookAt: VRMLookAt
+    -_lookAtTarget: Object3D
+    +setTarget(target: Object3D): void
+    +update(): void
+  }
+  
+  class AutoBlink {
+    -_expressionManager: VRMExpressionManager
+    -_nextBlinkTime: number
+    +update(delta: number): void
+  }
+}
+
+package "VR Integration" {
+  class VRButton {
+    +createButton(renderer: WebGLRenderer): HTMLElement
+  }
+  
+  class WebXRManager {
+    +enabled: boolean
+    +isPresenting: boolean
+    +setAnimationLoop(callback: Function): void
+  }
+}
+
+package "Audio Integration" {
+  class AudioProcessor {
+    +analyzeAudio(buffer: ArrayBuffer): PhonemeData
+    +extractEmotionalTone(audio: ArrayBuffer): EmotionData
+    +synchronizeWithVisuals(timing: TimingData): void
+  }
+  
+  class Screenplay {
+    +expression: string
+    +message: string
+    +timestamp: number
+  }
+}
+
+' Relationships
+VRMManager --> VRMViewer
+VRMViewer --> Viewer
+Viewer --> Model
+Viewer --> WebXRManager
+
+Model --> VRM
+Model --> EmoteController
+Model --> LipSync
+
+VRM --> VRMExpressionManager
+VRM --> VRMLoaderPlugin
+
+EmoteController --> ExpressionController
+EmoteController --> AutoLookAt
+EmoteController --> AutoBlink
+
+ExpressionController --> VRMExpressionManager
+LipSync --> AudioProcessor
+
+Model --> Screenplay
+AudioProcessor --> Screenplay
+
+WebXRManager --> VRButton
+
+' Dependency arrows
+VRMViewer ..> VRMManager : uses
+Model ..> VRMLoaderPlugin : loads with
+EmoteController ..> VRM : controls
+LipSync ..> AudioProcessor : analyzes with
+
+@enduml

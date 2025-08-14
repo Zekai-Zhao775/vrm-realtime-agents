@@ -1,0 +1,91 @@
+@startuml Real-time Audio Pipeline Sequence
+!theme plain
+title Real-time Audio Pipeline Communication Flow
+
+participant "User" as User
+participant "Browser\nWebRTC" as Browser
+participant "WebRTC\nTransport" as Transport
+participant "OpenAI\nRealtime API" as API
+participant "Agent\nManager" as AgentMgr
+participant "VRM\nAnimation" as Animation
+participant "Audio\nProcessor" as AudioProc
+
+== Session Initialization ==
+User -> Browser: Start voice session
+Browser -> Transport: Initialize WebRTC connection
+Transport -> API: Connect with ephemeral key
+API -> Transport: Connection established
+Transport -> AgentMgr: Session ready
+AgentMgr -> Animation: Initialize avatar
+
+== Real-time Voice Communication ==
+User -> Browser: Speak (continuous audio stream)
+Browser -> Transport: Stream audio data
+Transport -> API: Real-time audio transmission
+
+note over API: End-to-end audio processing\n(no TTS/STT pipeline)
+
+API -> Transport: AI response (real-time audio)
+Transport -> Browser: Stream response audio
+Browser -> User: Play AI voice
+
+== Parallel Avatar Animation ==
+API -> Transport: Transcription events
+Transport -> AgentMgr: Speech content analysis
+AgentMgr -> Animation: Expression & emotion data
+Animation -> AudioProc: Request lip-sync data
+AudioProc -> Animation: Phoneme timing
+Animation -> Animation: Synchronize lip movement
+
+== User Interruption Handling ==
+User -> Browser: Interrupt AI speech
+Browser -> Transport: Interruption signal
+Transport -> API: Interrupt current response
+API -> Transport: Stop audio generation
+Transport -> Browser: Clear audio buffer
+Browser -> User: Immediate audio stop
+
+note over Transport, API: Sub-500ms interruption response
+
+== Agent Handoff During Audio ==
+API -> Transport: Agent handoff event
+Transport -> AgentMgr: Context transfer
+AgentMgr -> AgentMgr: Switch active agent
+AgentMgr -> Animation: Update avatar persona
+Animation -> Animation: Adjust expressions
+
+note over AgentMgr: Context preserved\nacross handoffs
+
+== Session Monitoring ==
+loop Continuous monitoring
+    Transport -> AudioProc: Audio quality metrics
+    AudioProc -> Transport: Quality assessment
+    Transport -> Browser: Adaptive codec adjustment
+    
+    Animation -> Animation: Performance monitoring
+    alt Performance degradation
+        Animation -> AudioProc: Reduce quality
+        AudioProc -> Transport: Optimize processing
+    end
+end
+
+== Error Handling ==
+alt Network interruption
+    Transport -> API: Connection lost
+    Transport -> Browser: Fallback to text mode
+    Browser -> User: Connection status
+    
+    Transport -> API: Attempt reconnection
+    API -> Transport: Reconnection successful
+    Transport -> AgentMgr: Restore session context
+end
+
+== Session Termination ==
+User -> Browser: End session
+Browser -> Transport: Close connection
+Transport -> API: Terminate session
+API -> Transport: Session ended
+Transport -> AgentMgr: Save session data
+AgentMgr -> Animation: Stop avatar
+
+@enduml
