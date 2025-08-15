@@ -1,60 +1,68 @@
-flowchart TD
-    Start([User Connects]) --> GreetAgent[Greeting Agent]
+flowchart TB
+    %% System starts with greetAgent as root
+    Start([User Connects]) --> Root[greetAgent - Root Agent]
     
-    GreetAgent --> |fetchUserProfile| ProfileCheck{Existing User?}
-    ProfileCheck --> |Yes| Welcome[Welcome Back]
-    ProfileCheck --> |No| Onboard[Onboarding Process]
+    %% greetAgent tools and handoff logic
+    Root -->|Tools:<br/>- fetchUserProfile<br/>- fetchHistoryContext<br/>- updateUserProfile| Welcome[Welcome & Consent Process]
     
-    Welcome --> Consent[Consent Verification]
-    Onboard --> |updateUserProfile| Consent
+    %% Handoff configuration from code
+    Welcome --> Handoff{greetAgent handoffs to:}
+    Handoff -->|User chooses CBT| CBT[cbtTherapistAgent]
+    Handoff -->|User chooses Humanistic| Humanistic[humanisticTherapistAgent] 
+    Handoff -->|Crisis detected| Safety[safetyAgent]
     
-    Consent --> SafetyScreen[Initial Safety Screening]
-    SafetyScreen --> |Crisis Detected| SafetyAgent[Safety Agent]
-    SafetyScreen --> |Safe| ApproachSelect[Therapeutic Approach Selection]
+    %% cbtTherapistAgent flow
+    CBT -->|Tools:<br/>- fetchUserProfile<br/>- fetchHistoryContext| CBTSession[CBT Therapeutic Work]
+    CBTSession -->|Crisis detected| CBTToSafety[Handoff to safetyAgent]
+    CBTSession -->|Session ending| CBTEnd[Session End Detection]
+    CBTSession -->|Continue| CBTSession
     
-    ApproachSelect --> |CBT Selected| CBTAgent[CBT Therapist Agent]
-    ApproachSelect --> |Humanistic Selected| HumanAgent[Humanistic Therapist Agent]
+    CBTEnd -->|Tools:<br/>- updateProgress<br/>- updateMemory| CBTComplete[CBT Session Complete]
     
-    CBTAgent --> |During Session| CBTTools[CBT Tools & Techniques]
-    CBTTools --> |Thought Records| CBTAgent
-    CBTTools --> |Behavioral Activation| CBTAgent
-    CBTTools --> |Problem Solving| CBTAgent
+    %% humanisticTherapistAgent flow  
+    Humanistic -->|Tools:<br/>- fetchUserProfile<br/>- fetchHistoryContext| HumanisticSession[Humanistic Therapeutic Work]
+    HumanisticSession -->|Crisis detected| HumanisticToSafety[Handoff to safetyAgent]
+    HumanisticSession -->|Session ending| HumanisticEnd[Session End Detection]
+    HumanisticSession -->|Continue| HumanisticSession
     
-    HumanAgent --> |During Session| HumanTools[Humanistic Techniques]
-    HumanTools --> |Reflective Listening| HumanAgent
-    HumanTools --> |Values Exploration| HumanAgent
-    HumanTools --> |Self-Discovery| HumanAgent
+    HumanisticEnd -->|Tools:<br/>- updateProgress<br/>- updateMemory| HumanisticComplete[Humanistic Session Complete]
     
-    CBTAgent --> |Crisis Detection| CrisisCheck{Crisis Indicators?}
-    HumanAgent --> |Crisis Detection| CrisisCheck
+    %% safetyAgent flow
+    CBTToSafety --> Safety
+    HumanisticToSafety --> Safety
+    Safety -->|Tools:<br/>- fetchUserProfile<br/>- fetchHistoryContext| SafetyWork[Crisis Assessment & Support]
+    SafetyWork -->|Tools:<br/>- updateProgress<br/>- updateMemory| SafetyComplete[Safety Intervention Complete]
     
-    CrisisCheck --> |Yes| HandoffSafety[Handoff to Safety Agent]
-    CrisisCheck --> |No| ContinueTherapy[Continue Therapy]
+    %% All agents can only handoff to safetyAgent (per handoff config)
+    CBTComplete --> SessionEnd[Session Complete]
+    HumanisticComplete --> SessionEnd
+    SafetyComplete --> SessionEnd
     
-    HandoffSafety --> SafetyAgent
-    SafetyAgent --> |Risk Assessment| RiskLevel{Risk Level?}
-    RiskLevel --> |High| EmergencyProtocol[Emergency Protocol]
-    RiskLevel --> |Moderate| SafetyPlanning[Safety Planning]
-    RiskLevel --> |Low| BackToTherapy[Return to Therapy]
+    SessionEnd --> Disconnect([User Disconnects])
     
-    ContinueTherapy --> SessionEnd{Session Ending?}
-    SafetyPlanning --> SessionEnd
-    BackToTherapy --> SessionEnd
+    %% Show handoff configuration from index.ts
+    subgraph "Handoff Configuration"
+        HandoffConfig["greetAgent.handoffs = [cbtTherapistAgent, humanisticTherapistAgent, safetyAgent]<br/>cbtTherapistAgent.handoffs = [safetyAgent]<br/>humanisticTherapistAgent.handoffs = [safetyAgent]<br/>safetyAgent.handoffs = []"]
+    end
     
-    SessionEnd --> |Yes| Documentation[Update Progress & Memory]
-    SessionEnd --> |No| ContinueTherapy
+    %% Show tools per agent
+    subgraph "Agent Tools"
+        GreetTools["greetAgent:<br/>- fetchUserProfile<br/>- updateUserProfile<br/>- fetchHistoryContext"]
+        CBTTools["cbtTherapistAgent:<br/>- fetchUserProfile<br/>- updateProgress<br/>- updateMemory<br/>- fetchHistoryContext"]
+        HumanTools["humanisticTherapistAgent:<br/>- fetchUserProfile<br/>- updateProgress<br/>- updateMemory<br/>- fetchHistoryContext"]
+        SafetyTools["safetyAgent:<br/>- fetchUserProfile<br/>- updateProgress<br/>- updateMemory<br/>- fetchHistoryContext"]
+    end
     
-    Documentation --> |updateProgress| ProgressUpdate[Progress Documentation]
-    Documentation --> |updateMemory| MemoryUpdate[Memory Documentation]
-    
-    ProgressUpdate --> EndSession[Session Complete]
-    MemoryUpdate --> EndSession
-    
-    EmergencyProtocol --> CrisisResources[Crisis Resources & Contacts]
-    CrisisResources --> EndSession
-    
-    EndSession --> Goodbye[Therapeutic Closure]
-    Goodbye --> Disconnect([User Disconnects])
+    %% Styling
+    style Root fill:#e1f5fe,stroke:#01579b,stroke-width:3px
+    style CBT fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Humanistic fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    style Safety fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    style HandoffConfig fill:#fff3e0
+    style GreetTools fill:#e1f5fe
+    style CBTTools fill:#f3e5f5
+    style HumanTools fill:#e8f5e8
+    style SafetyTools fill:#ffebee
     
     style GreetAgent fill:#e1f5fe
     style CBTAgent fill:#f3e5f5
