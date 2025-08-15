@@ -26,7 +26,13 @@ export const EventProvider: FC<PropsWithChildren> = ({ children }) => {
         direction,
         eventName,
         eventData,
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: new Date().toLocaleTimeString('en-US', { 
+          hour12: false, 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit', 
+          fractionalSecondDigits: 3 
+        }),
         expanded: false,
       },
     ]);
