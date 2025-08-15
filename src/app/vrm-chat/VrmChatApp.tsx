@@ -23,8 +23,8 @@ export default function VrmChatApp() {
   const [showConversationLog, setShowConversationLog] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   
-  // Get agentConfig from URL parameters (same as debug page)
-  const agentConfig = searchParams.get("agentConfig") || "chatSupervisor";
+  // Get agentConfig from URL parameters (fixed to multiAgentVirtualTherapist)
+  const agentConfig = "multiAgentVirtualTherapist";
   const previousAgentConfigRef = useRef<string>(agentConfig);
 
   const { viewer } = useContext(ViewerContext);
@@ -34,13 +34,13 @@ export default function VrmChatApp() {
   const session = useRealtimeSession();
   const historyHandlers = useHandleSessionHistory();
 
-  // Initialize URL parameter if missing or invalid (same as debug page)
+  // Initialize URL parameter if missing or invalid (set to multiAgentVirtualTherapist)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     let finalAgentConfig = searchParams.get("agentConfig");
     if (!finalAgentConfig || !allAgentSets[finalAgentConfig]) {
-      finalAgentConfig = "chatSupervisor";
+      finalAgentConfig = "multiAgentVirtualTherapist";
       const url = new URL(window.location.toString());
       url.searchParams.set("agentConfig", finalAgentConfig);
       window.location.replace(url.toString());
@@ -285,11 +285,11 @@ export default function VrmChatApp() {
                 disabled={isConnected}
                 className={styles.select}
               >
-                <option value="chatSupervisor">Chat Supervisor</option>
-                <option value="simpleHandoff">Simple Handoff</option>
-                <option value="customerServiceRetail">Customer Service</option>
-                <option value="virtualTherapist">Virtual Therapist</option>
-                <option value="multiAgentVirtualTherapist">Multi-Agent Therapist</option>
+                {Object.keys(allAgentSets).map((agentKey) => (
+                  <option key={agentKey} value={agentKey}>
+                    {agentKey}
+                  </option>
+                ))}
               </select>
             </div>
 

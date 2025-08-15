@@ -33,10 +33,6 @@ import { multiAgentVirtualTherapistScenario, multiAgentTherapistCompanyName } fr
 
 // Map used by connect logic for scenarios defined via the SDK.
 const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
-  simpleHandoff: simpleHandoffScenario,
-  customerServiceRetail: customerServiceRetailScenario,
-  chatSupervisor: chatSupervisorScenario,
-  virtualTherapist: virtualTherapistScenario,
   multiAgentVirtualTherapist: multiAgentVirtualTherapistScenario,
 };
 
@@ -222,13 +218,7 @@ function App() {
           reorderedAgents.unshift(agent);
         }
 
-        const companyName = agentSetKey === 'customerServiceRetail'
-          ? customerServiceRetailCompanyName
-          : agentSetKey === 'virtualTherapist'
-            ? virtualTherapistCompanyName
-            : agentSetKey === 'multiAgentVirtualTherapist'
-              ? multiAgentTherapistCompanyName
-              : chatSupervisorCompanyName;
+        const companyName = multiAgentTherapistCompanyName;
         const guardrail = createModerationGuardrail(companyName);
 
         await connect({
