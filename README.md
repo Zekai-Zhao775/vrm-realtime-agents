@@ -2,6 +2,11 @@
 
 A real-time multi-agent virtual therapist system using OpenAI's Realtime API with VRM avatars and WebXR support.
 
+![1](doc/1.png)
+![2](doc/2.png)
+![3](doc/3.png)
+![4](doc/4.png)
+
 ## Installation & Setup
 
 ### 1. Install Dependencies
@@ -128,3 +133,37 @@ private vrmConfigs: Record<string, VRMConfig> = {
 ```
 
 Your new multi-agent system will now appear in both the VRM chat interface and debug interface dropdown menus.
+
+## Data Storage
+
+**Memory & History Context**: All conversation history and memory context is stored locally in your browser's localStorage. This means:
+- Your data never leaves your device
+- Conversations persist between browser sessions
+- Clearing browser data will remove all stored conversations
+- Data is isolated per browser and device
+
+## Disclaimer of Liability
+
+This software is provided for educational and research purposes only. The virtual therapist agents are AI-powered chatbots and are not a substitute for professional medical advice, diagnosis, or treatment. 
+
+**Important Notes:**
+- This system is not intended to provide actual therapeutic or medical services
+- Always seek the advice of qualified healthcare professionals for any medical or mental health concerns
+- The developers and contributors of this project are not responsible for any decisions made based on interactions with the AI agents
+- Use this software at your own risk and discretion
+- The AI responses may not always be accurate, appropriate, or suitable for your specific situation
+
+By using this software, you acknowledge that you understand these limitations and agree to use it responsibly.
+
+## Built Upon
+
+This project is built upon and extends the following open-source projects:
+
+- **[ChatVRM](https://github.com/pixiv/ChatVRM)** by Pixiv - Provides the VRM avatar rendering and animation system
+- **[OpenAI Realtime Agents](https://github.com/openai/openai-realtime-agents)** by OpenAI - Provides the multi-agent framework and realtime conversation capabilities
+
+This project gratefully acknowledges these projects and their contributors for making this work possible.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
