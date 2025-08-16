@@ -1,6 +1,6 @@
 # VRM Realtime Agents
 
-A real-time multi-agent virtual therapist system using OpenAI's Realtime API with VRM avatars and WebXR support.
+A real-time multi-agent virtual therapist system using OpenAI Realtime API, OpenAI Agent SDK with VRM avatars and WebXR support.
 
 ![1](doc/1.png)
 ![2](doc/2.png)
