@@ -2,6 +2,8 @@
 
 A real-time multi-agent virtual therapist system using OpenAI Realtime API, OpenAI Agent SDK with VRM avatars and WebXR support.
 
+Try the app yourself: [https://vrm-realtime-agents.vercel.app](https://vrm-realtime-agents.vercel.app)
+
 ![1](doc/1.png)
 ![2](doc/2.png)
 ![3](doc/3.png)
