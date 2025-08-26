@@ -4,6 +4,17 @@ A real-time multi-agent virtual therapist system using OpenAI Realtime API, Open
 
 Try the app yourself: [https://vrm-realtime-agents.vercel.app](https://vrm-realtime-agents.vercel.app)
 
+## Agent System
+- **Greeting Agent** – onboarding, consent, and therapy mode selection  
+- **CBT Therapist Agent** – structured, skills-based cognitive behavioral therapy  
+- **Humanistic Therapist Agent** – person-centered, empathic conversation  
+- **Safety Agent** – crisis monitoring and escalation  
+
+## Handoff Mechanism
+- Greeting Agent hands off to CBT or Humanistic Agent based on user preference  
+- Any agent can hand off to the Safety Agent if crisis signals are detected  
+- Shared memory and context ensure smooth transitions without losing conversation flow  
+
 ![1](doc/1.png)
 ![2](doc/2.png)
 ![3](doc/3.png)
